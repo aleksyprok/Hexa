@@ -14,30 +14,30 @@ use fnames
 print*,'#########################################'
 print*,'###### Surface evolution generator ######'
 print*,'#########################################'
-print*,
+print*,''
 
-      
-  
+
+
       CALL sysdat !get gridsize, number of frames and working directory
-      
+
       CALL array_alloc() !allocate arrays
-      
+
       CALL readin ! readin 'mag_data' file
-      
+
 
       allocate(ax(2*na+1,2*na+1),ay(2*na+1,2*na+1))
-      
-      
+
+
       open (unit=11,file=trim(dir)//'/hexa_files/'//trim(dir)//'_evolve',form='unformatted')
-        
+
       j = 1
-      
+
       write(11) 1
-      
-      
+
+
       dunk_count=0
       do i=1,nt !loop over frames
-         dunk_count = dunk_count+1         
+         dunk_count = dunk_count+1
          call poislin() ! calculate Ax and Ay from Bz on the base
          call writeout_evolve !write Ax and Ay to the '_evolve' file
          write(*,"('Frame ',i3,' of ',i3,' processed')")dunk_count,nt
@@ -45,11 +45,8 @@ print*,
       print*,''
       print*,'File '//trim(dir)//'/hexa_files/'//trim(dir)//'_evolve written to file.'
       call array_dealloc
-       
+
       close(11)
-      
-      
+
+
       end
-
-
-
