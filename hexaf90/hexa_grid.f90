@@ -10,11 +10,11 @@ module grid
     integer, dimension(mpidir) :: dumcord
   integer :: namelen
   character*(MPI_MAX_PROCESSOR_NAME) :: procname
-  
+
 
 !
 ! Determine sub array division of global arrays.
-! USE MPI routine to split up  grid - dims gives number of processes in 
+! USE MPI routine to split up  grid - dims gives number of processes in
 ! each di rection.
 
   call MPI_DIMS_CREATE(mpisize,mpidir,dims,ierr)
@@ -44,11 +44,11 @@ module grid
 ! sets of cartesian geometry with boundaries and places communicator in index comm.
 
   call MPI_CART_CREATE(MPI_COMM_WORLD,mpidir,nproc,periods,.TRUE.,comm,ierr)
-  
+
   call MPI_COMM_RANK(comm,rank,ierr)
 
-  CALL MPI_CART_COORDS(comm,rank,mpidir,coords,ierr) 
-  
+  CALL MPI_CART_COORDS(comm,rank,mpidir,coords,ierr)
+
   call MPI_Get_processor_name(procname,namelen,ierr)
 
 
@@ -62,7 +62,7 @@ module grid
 !
 ! Determine rank of processes left/right and up/down of present rank
 !
- 
+
   CALL MPI_CART_SHIFT(comm,0,1,left,right,ierr)
   print*,'Left/right',left,rank,right
   if (mpidir .eq. 2) then
@@ -71,14 +71,14 @@ module grid
   endif
 
 
-  dumcord = 0 
+  dumcord = 0
   call MPI_CART_RANK(comm,dumcord,rankstart,ierr) !get rank of process at (0,0)
-                                                    
+
 
 !
 !  Read param1 file and compute spacings in 3d array:
 !
-    if (rank .eq.rankstart) then 
+    if (rank .eq.rankstart) then
       filename=dir(1:length(dir,20))//'/param1'
                                            !     print *,'Read grid parameters: ',filename
       open(unit=3,file=filename,form='formatted',status='old')
@@ -94,15 +94,15 @@ module grid
     CALL MPI_BCAST(k,1,MPI_INTEGER,rankstart,comm,ierr)
     CALL MPI_BCAST(length_cm,1,MPI_real,rankstart,comm,ierr)
     CALL MPI_BCAST(time_s,1,MPI_real,rankstart,comm,ierr)
-                                                      !    
-                                                      
+                                                      !
+
     call MPI_BARRIER(comm,ierr)
 
     nxglobal=i
     nyglobal=j
     nzglobal=k
-    
-    if( (i.ne.nxglobal) .or. (j.ne.nyglobal) .or. (k.ne.nzglobal) ) then   
+
+    if( (i.ne.nxglobal) .or. (j.ne.nyglobal) .or. (k.ne.nzglobal) ) then
        print*,"arrays do not match theoretical limit : correct",rank
        call MPI_FINALIZE(ierr)
        stop
@@ -137,7 +137,7 @@ module grid
    endif
 
  endif
-   
+
 
 !
 !  Compute spacings in 3D array:
@@ -161,14 +161,14 @@ module grid
 !-----------------------------------------------------------------------
 
 subroutine setup_param
-          
- 
+
+
     if (rank .eq. 0) then
       write (filename,fmt='(a,"/",a,"_setup")') &
          dir(1:length(dir,20)),root(1:length(root,10))
       print *,'Read model parameters: ',filename
       open(unit=3,file=filename,form='formatted',status='old')
-      vsetup=get_value(3,'vsetup')    ! setup file version   
+      vsetup=get_value(3,'vsetup')    ! setup file version
       nmajor=get_value(3,'nmajor')
       nstrt  =get_value(3,'nstrt')
       nend  =get_value(3,'nend')
@@ -176,9 +176,9 @@ subroutine setup_param
       eta4a  =get_value(3,'eta4a')
       periodic =get_value(3,'periodic')
       open=get_value(3,'open')
-      
+
       close(3)
-      
+
       print *,'nmajor=',nmajor
       print *,'nstrt=',nstrt
       print *,'nend =',nend
@@ -186,24 +186,24 @@ subroutine setup_param
       print *,'eta4a =',eta4a
       print *,'periodic=',periodic
       print *, 'open =',open
-      
+
    endif
-   
+
   CALL MPI_BCAST(vsetup,1,MPI_INTEGER,0,comm,ierr)
-  CALL MPI_BCAST(nmajor,1,MPI_INTEGER,0,comm,ierr)  
+  CALL MPI_BCAST(nmajor,1,MPI_INTEGER,0,comm,ierr)
   CALL MPI_BCAST(nminor,1,MPI_INTEGER,0,comm,ierr)
- 
-  CALL MPI_BCAST(nstrt,1,MPI_INTEGER,0,comm,ierr) 
-  CALL MPI_BCAST(nend,1,MPI_INTEGER,0,comm,ierr) 
-  CALL MPI_BCAST(etaia,1,MPI_REAL,0,comm,ierr) 
-  CALL MPI_BCAST(eta4a,1,MPI_REAL,0,comm,ierr) 
-  CALL MPI_BCAST(periodic,1,MPI_INTEGER,0,comm,ierr) 
-  CALL MPI_BCAST(open,1,MPI_INTEGER,0,comm,ierr) 
+
+  CALL MPI_BCAST(nstrt,1,MPI_INTEGER,0,comm,ierr)
+  CALL MPI_BCAST(nend,1,MPI_INTEGER,0,comm,ierr)
+  CALL MPI_BCAST(etaia,1,MPI_REAL,0,comm,ierr)
+  CALL MPI_BCAST(eta4a,1,MPI_REAL,0,comm,ierr)
+  CALL MPI_BCAST(periodic,1,MPI_INTEGER,0,comm,ierr)
+  CALL MPI_BCAST(open,1,MPI_INTEGER,0,comm,ierr)
 
 end subroutine setup_param
 
   subroutine arrayaloc
-  
+
     allocate(aax(0:nx+1,0:ny+2,nz+1),aay(0:nx+2,0:ny+1,nz+1),aaz(0:nx+2,0:ny+2,nz))
     allocate(aax0(0:nx+1,0:ny+2,ntmax),aay0(0:nx+2,0:ny+1,ntmax))
     allocate(daax(0:nx+1,0:ny+2),daay(0:nx+2,0:ny+1))
@@ -213,18 +213,23 @@ end subroutine setup_param
     allocate(div(nx+1,ny+1,nz+1),bx(nx+1,ny+1,nz+1),by(nx+1,ny+1,nz+1),bz(nx+1,ny+1,nz+1))
     allocate(bb(nx+1,ny+1,nz+1),bbm(nx+1,ny+1,nz+1),ch(nx+1,ny+1,nz+1))
     allocate(cx(nx+1,ny+1,nz+1),cy(nx+1,ny+1,nz+1),cz(nx+1,ny+1,nz+1))
-    allocate(vx(nx+1,ny+1,nz+1),vy(nx+1,ny+1,nz+1),vz(nx+1,ny+1,nz+1)) 
-    
+    allocate(vx(nx+1,ny+1,nz+1),vy(nx+1,ny+1,nz+1),vz(nx+1,ny+1,nz+1))
+
+    ! apkp - start
+    allocate(bbx0(nx + 1, ny + 2, ntmax))
+    allocate(bby0(nx + 2, ny + 1, ntmax))
+    ! apkp - end
+
     if (open .eq. 1) then !allocate flux correction array
       allocate(ay_corr(0:nx+2,0:ny+1,nz+1))
     endif
-    
+
   end subroutine arrayaloc
-  
-  
-  
+
+
+
   subroutine arraydealoc
-  
+
     deallocate(aax,aay,aaz)
     deallocate(aax0,aay0)
     deallocate(daax,daay)
@@ -233,7 +238,12 @@ end subroutine setup_param
     deallocate(div,bx,by,bz)
     deallocate(bb,bbm,ch)
     deallocate(cx,cy,cz)
-    deallocate(vx,vy,vz) 
+    deallocate(vx,vy,vz)
+
+    ! apkp - start
+    deallocate(bbx0, bby0)
+    ! apkp - end
+
   end subroutine arraydealoc
 
 

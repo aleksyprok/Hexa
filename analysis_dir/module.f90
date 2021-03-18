@@ -10,6 +10,9 @@ double precision, allocatable :: helicity(:)
 double precision :: L0
 double precision, allocatable, dimension(:,:,:) :: cx, cy, cz
 double precision, allocatable, dimension(:,:,:) :: base
+! apkp - start
+double precision, allocatable, dimension(:,:,:) :: bbx0, bbz0
+! apkp - end
 
  character (len=40) :: dir, root,dirp,rootp
  character (len=40) :: fname
@@ -29,4 +32,3 @@ contains
 
     end function length
 end module
-

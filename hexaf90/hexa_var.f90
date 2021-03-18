@@ -16,7 +16,7 @@ module var_global
   integer :: nx,ny,nz
 
 !  Vector potentials:
- 
+
   !integer, parameter :: ntmax=401
   integer :: ntmax
   real, dimension(:,:,:), allocatable :: aax
@@ -32,6 +32,10 @@ module var_global
   real, dimension(:,:,:), allocatable :: bbx
   real, dimension(:,:,:), allocatable :: bby
   real, dimension(:,:,:), allocatable :: bbz
+  ! apkp - start
+  real, dimension(:,:,:), allocatable :: bbx0
+  real, dimension(:,:,:), allocatable :: bby0
+  ! apkp - end
 
   real, dimension(:,:,:), allocatable :: ccx
   real, dimension(:,:,:), allocatable :: ccy
@@ -44,12 +48,12 @@ module var_global
 
 ! Subdirectory name.
 
-    
+
     character*30 :: dir
     character*20 :: root
-    
+
     character*50 :: filename
-    
+
 ! Input variable for run
 
 
@@ -78,7 +82,7 @@ real :: time !time in hexa units
 
 ! variables associated with flux imbalance corrections
 
-real, dimension(:), allocatable :: corr,fimb 
+real, dimension(:), allocatable :: corr,fimb
 real :: imb,totimb
 real, dimension(:,:,:), allocatable :: ay_corr
 

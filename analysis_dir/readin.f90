@@ -145,6 +145,10 @@ by=(bby(0:nx,:,0:nz)+bby(1:nx+1,:,0:nz)+bby(0:nx,:,1:nz+1)+bby(1:nx+1,:,1:nz+1))
 
 
 base(:,:,nt+1) = bz(:,:,1)
+! apkp - start
+bbx0(:, :, nt + 1) = 0.5 * (bbx(:, :, 0) + bbx(:, :, 1))
+bby0(:, :, nt + 1) = 0.5 * (bby(:, :, 0) + bby(:, :, 1))
+! apkp - end
 
 else if (ftype .eq. 'p') then
 
