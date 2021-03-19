@@ -10,7 +10,7 @@ module cal
 !------------------------------------------------------------------
   subroutine step!(mode1,numstep,base)
 
-!  This routine takes one major step of the magneto-frictional relaxation. 
+!  This routine takes one major step of the magneto-frictional relaxation.
 !  It calculates the magnetic field B, current density C (=curl B),
 !  and velocity V (= C x B / B**2), and then advances the vector
 !  potential A according to an explicit scheme.
@@ -37,41 +37,41 @@ module cal
     real :: localj,globalj
     real :: alpha(nx+1,ny+1,nz+1)
     real :: linear(0:nx+2)
-  
-    
+
+
     frc=frc_coef*(1.E10)/(length_cm**2)*time_s !define frictional coefficient in dimensionless units
 
     t=0. !set local time variable to zero
-    
-    if (open .eq. 1) then !set up array for flux balancing      
-	  do i=0,nx+2
-	    linear(i)=nx*coords(1)+(i-1) !effectively creates findgen(nx)
-	  enddo
-	  
-	  linear=linear*delx*imb !correction to Ay = imbalance/pixel*dx*x
-	  
-	  do k=1,nz+1
-	    do j=0,ny+1
-		  ay_corr(:,j,k)=linear(:) !Ay_corr = f(x) = imbalance/pixel*dx*x in sll volume
-	    enddo
-	  enddo
-	  
-	  daay=daay-ay_corr(:,:,1) !subtract correction from surface evolution ay (this is added on at the end to the whole volume)      
+
+    if (open .eq. 1) then !set up array for flux balancing
+  	  do i=0,nx+2
+  	    linear(i)=nx*coords(1)+(i-1) !effectively creates findgen(nx)
+  	  enddo
+
+  	  linear=linear*delx*imb !correction to Ay = imbalance/pixel*dx*x
+
+  	  do k=1,nz+1
+  	    do j=0,ny+1
+  		  ay_corr(:,j,k)=linear(:) !Ay_corr = f(x) = imbalance/pixel*dx*x in sll volume
+  	    enddo
+  	  enddo
+
+  	  daay=daay-ay_corr(:,:,1) !subtract correction from surface evolution ay (this is added on at the end to the whole volume)
     endif
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
 do while (t .lt. 1.) ! loop until time has reached 1
-    
+
     if (rank .eq. rankstart) print*,time,dt,basedt,dt/basedt
-    
+
     t=t+dt
     time=time+dt
 
-    
+
       aax(0:nx+1,0:ny+2,1)=aax(0:nx+1,0:ny+2,1)+daax(0:nx+1,0:ny+2)*dt
       aay(0:nx+2,0:ny+1,1)=aay(0:nx+2,0:ny+1,1)+daay(0:nx+2,0:ny+1)*dt
 
@@ -82,7 +82,7 @@ do while (t .lt. 1.) ! loop until time has reached 1
     div(1:nx+1,1:ny+1,2:nz)=(aax(1:nx+1,1:ny+1,2:nz)-aax(0:nx ,1:ny+1,2:nz  ))/delx  &
                        +(aay(1:nx+1,1:ny+1,2:nz)-aay(1:nx+1 ,0:ny ,2:nz  ))/dely  &
                        +(aaz(1:nx+1,1:ny+1,2:nz)-aaz(1:nx+1  ,1:ny+1  ,1:nz-1))/delz
-		       
+
     div(1:nx+1,1:ny+1,   1)=(aax(1:nx+1,1:ny+1,   1)-aax(0:nx,1:ny+1 ,     1))/delx  &
                          +(aay(1:nx+1,1:ny+1,   1)-aay(1:nx+1  ,0:ny ,     1))/dely
 
@@ -98,7 +98,7 @@ do while (t .lt. 1.) ! loop until time has reached 1
     if (left .eq. MPI_PROC_NULL) then
       div(1,1:ny+1,1:nz+1) = 0.0
     endif
-    
+
     div(1:nx+1,1:ny+1,nz+1) = 0.0
 
 !  Compute BBX, BBY, BBZ on cell faces:
@@ -109,19 +109,19 @@ do while (t .lt. 1.) ! loop until time has reached 1
 
     if (down .eq. MPI_PROC_NULL) then
       bbz(1:nx+2,   1,1:nz+1)=bbz(1:nx+2,   2,1:nz+1)
-    endif  
+    endif
     if (up .eq. MPI_PROC_NULL) then
       bbz(1:nx+2,ny+2,1:nz+1)=bbz(1:nx+2,ny+1,1:nz+1)
     endif
     if (left .eq. MPI_PROC_NULL) then
       bbz(1,1:ny+2,1:nz+1)=bbz(2,1:ny+2,1:nz+1)
-    endif  
+    endif
     if (right .eq. MPI_PROC_NULL) then
       bbz(nx+2,1:ny+2,1:nz+1)=bbz(nx+1,1:ny+2,1:nz+1)
     endif
 
 
-    
+
     bbx(1:nx+1,1:ny+2,2:nz+1)=  &
        (aaz(1:nx+1,1:ny+2,1:nz)-aaz(1:nx+1,0:ny+1,1:nz))/dely  &
       -(aay(1:nx+1,0:ny+1,2:nz+1)-aay(1:nx+1,0:ny+1,1:nz))/delz
@@ -132,10 +132,10 @@ do while (t .lt. 1.) ! loop until time has reached 1
     if (up .eq. MPI_PROC_NULL) then
       bbx(1:nx+1,ny+2,2:nz+1)=bbx(1:nx+1,ny+1,2:nz+1)
     endif
-    
+
     bbx(1:nx+1,1:ny+2,   1)=bbx(1:nx+1,1:ny+2,   2)  &
          -delz/delx*(bbz(2:nx+2,1:ny+2,1)-bbz(1:nx+1,1:ny+2,1))
-	
+
     if (open .eq. 1) then
         bbx(1:nx+1,1:ny+2,nz+2) = (bbz(2:nx+2,1:ny+2,nz+1) - bbz(1:nx+1,1:ny+2,nz+1))*delz/delx + bbx(1:nx+1,1:ny+2,nz+1)
     else
@@ -152,8 +152,8 @@ do while (t .lt. 1.) ! loop until time has reached 1
     endif
     if (left .eq. MPI_PROC_NULL) then
       bby(1,1:ny+1,2:nz+1)=bby(2,1:ny+1,2:nz+1)
-    endif   
- 
+    endif
+
     bby(1:nx+2,1:ny+1,   1)=bby(1:nx+2,1:ny+1,   2)  &
          -delz/dely*(bbz(1:nx+2,2:ny+2,1)-bbz(1:nx+2,1:ny+1,1))
     if (open .eq. 1) then
@@ -193,8 +193,8 @@ do while (t .lt. 1.) ! loop until time has reached 1
               +bbz(1:nx+1,2:ny+2,1:nz+1)+bbz(2:nx+2,2:ny+2,1:nz+1))
 
     bb=bx*bx+by*by+bz*bz
-    
-    
+
+
 
 !  Field strength with minimum value for magneto-friction:
 
@@ -225,9 +225,9 @@ do while (t .lt. 1.) ! loop until time has reached 1
          0.5*(ccz(1:nx+1,1:ny+1,1:nz+1)+ccz(1:nx+1,1:ny+1,2:nz+2))
 
     ch=(bx*cx+by*cy+bz*cz)/bbm
-    
+
     j2=cx*cx+cy*cy+cz*cz
-    
+
     alpha=ch
 
 !  Apply isotropic diffusion of div(A):
@@ -314,15 +314,15 @@ do while (t .lt. 1.) ! loop until time has reached 1
 
 !  Magneto-frictional velocity:
 
-    vx=frc*(cy*bz-cz*by)/bbm  
-    vy=frc*(cz*bx-cx*bz)/bbm   
-    vz=frc*(cx*by-cy*bx)/bbm  
+    vx=frc*(cy*bz-cz*by)/bbm
+    vy=frc*(cz*bx-cx*bz)/bbm
+    vz=frc*(cx*by-cy*bx)/bbm
 
 !  Rate of change of vector potential:
 
     cx=vy*bz-vz*by
-    cy=vz*bx-vx*bz 
-    cz=vx*by-vy*bx 
+    cy=vz*bx-vx*bz
+    cz=vx*by-vy*bx
 
 !  Helicity fluxes, and effect of hyperdiffusion:
 
@@ -331,11 +331,11 @@ do while (t .lt. 1.) ! loop until time has reached 1
        ccx(2:nx+1,1:ny+1,1:nz+1)=  &
             0.5*(bb(2:nx+1,1:ny+1,1:nz+1)+bb(1:nx,1:ny+1,1:nz+1))  &
                *(ch(2:nx+1,1:ny+1,1:nz+1)-ch(1:nx,1:ny+1,1:nz+1))/delx
-	       
+
     call MPI_SENDRECV(ccx(nx+1,1:ny+1,1:nz+1),(ny+1)*(nz+1),MPI_REAL,right,tag,ccx(1,1:ny+1,1:nz+1),(ny+1)*(nz+1),MPI_REAL,left,tag,comm,stat,ierr)
     call MPI_SENDRECV(ccx(2,1:ny+1,1:nz+1),(ny+1)*(nz+1),MPI_REAL,left,tag,ccx(nx+2,1:ny+1,1:nz+1),(ny+1)*(nz+1),MPI_REAL,right,tag,comm,stat,ierr)
 
-       if (right .eq. MPI_PROC_NULL ) then   
+       if (right .eq. MPI_PROC_NULL ) then
          ccx(nx+2,1:ny+1 ,1:nz+1)=ccx(nx+1, 1:ny+1,1:nz+1)
        endif
        if (left .eq. MPI_PROC_NULL ) then
@@ -345,21 +345,21 @@ do while (t .lt. 1.) ! loop until time has reached 1
        ccy(1:nx+1,2:ny+1,1:nz+1)=  &
             0.5*(bb(1:nx+1,2:ny+1,1:nz+1)+bb(1:nx+1,1:ny,1:nz+1))  &
                *(ch(1:nx+1,2:ny+1,1:nz+1)-ch(1:nx+1,1:ny,1:nz+1))/dely
-	       
-    call MPI_SENDRECV(ccy(1:nx+1,ny+1,1:nz+1),(nx+1)*(nz+1),MPI_REAL,up,tag,ccy(1:nx+1,1,1:nz+1),(nx+1)*(nz+1),MPI_REAL,down,tag,comm,stat,ierr) 
-    call MPI_SENDRECV(ccy(1:nx+1,2,1:nz+1),(nx+1)*(nz+1),MPI_REAL,down,tag,ccy(1:nx+1,ny+2,1:nz+1),(nx+1)*(nz+1),MPI_REAL,up,tag,comm,stat,ierr) 
 
-       if (down .eq. MPI_PROC_NULL ) then   
+    call MPI_SENDRECV(ccy(1:nx+1,ny+1,1:nz+1),(nx+1)*(nz+1),MPI_REAL,up,tag,ccy(1:nx+1,1,1:nz+1),(nx+1)*(nz+1),MPI_REAL,down,tag,comm,stat,ierr)
+    call MPI_SENDRECV(ccy(1:nx+1,2,1:nz+1),(nx+1)*(nz+1),MPI_REAL,down,tag,ccy(1:nx+1,ny+2,1:nz+1),(nx+1)*(nz+1),MPI_REAL,up,tag,comm,stat,ierr)
+
+       if (down .eq. MPI_PROC_NULL ) then
          ccy(1:nx+1,   1,1:nz+1)=ccy(1:nx+1,   2,1:nz+1)
        endif
        if ( up .eq. MPI_PROC_NULL ) then
         ccy(1:nx+1,ny+2,1:nz+1)=ccy(1:nx+1,ny+1,1:nz+1)
        endif
-     
+
        ccz(1:nx+1,1:ny+1,2:nz+1)=  &
             0.5*(bb(1:nx+1,1:ny+1,2:nz+1)+bb(1:nx+1,1:ny+1,1:nz))  &
                *(ch(1:nx+1,1:ny+1,2:nz+1)-ch(1:nx+1,1:ny+1,1:nz))/delz
- 
+
        ccz(1:nx+1,1:ny+1,   1)=ccz(1:nx+1,1:ny+1,   2)
        ccz(1:nx+1,1:ny+1,nz+2)=ccz(1:nx+1,1:ny+1,nz+1)
 
@@ -432,24 +432,24 @@ do while (t .lt. 1.) ! loop until time has reached 1
    if (open .eq. 1) then
      aay=aay+ay_corr*dt !correct Ay throughout the whole volume to ensure flux balance
    endif
-    
-    
+
+
    if (coords(2) .ne. nproc(2)-1) then
           call MPI_SENDRECV(aax(nx,1:ny,1:nz+1),ny*(nz+1),MPI_REAL,right,tag,aax(0,1:ny,1:nz+1),ny*(nz+1),MPI_REAL,left,tag,comm,stat,ierr)
           call MPI_SENDRECV(aax(1,1:ny,1:nz+1),ny*(nz+1),MPI_REAL,left,tag,aax(nx+1,1:ny,1:nz+1),ny*(nz+1),MPI_REAL,right,tag,comm,stat,ierr)
-   
+
           call MPI_SENDRECV(aay(nx,1:ny,1:nz+1),ny*(nz+1),MPI_REAL,right,tag,aay(0,1:ny,1:nz+1),ny*(nz+1),MPI_REAL,left,tag,comm,stat,ierr)
           call MPI_SENDRECV(aay(1:2,1:ny,1:nz+1),2*ny*(nz+1),MPI_REAL,left,tag,aay(nx+1:nx+2,1:ny,1:nz+1),2*ny*(nz+1),MPI_REAL,right,tag,comm,stat,ierr)
-  
+
           call MPI_SENDRECV(aaz(nx,1:ny,1:nz),ny*nz,MPI_REAL,right,tag,aaz(0,1:ny,1:nz),ny*nz,MPI_REAL,left,tag,comm,stat,ierr)
          call MPI_SENDRECV(aaz(1:2,1:ny,1:nz),2*ny*nz,MPI_REAL,left,tag,aaz(nx+1:nx+2,1:ny,1:nz),2*ny*nz,MPI_REAL,right,tag,comm,stat,ierr)
     else
           call MPI_SENDRECV(aax(nx,1:ny+1,1:nz+1),(ny+1)*(nz+1),MPI_REAL,right,tag,aax(0,1:ny+1,1:nz+1),(ny+1)*(nz+1),MPI_REAL,left,tag,comm,stat,ierr)
           call MPI_SENDRECV(aax(1,1:ny+1,1:nz+1),(ny+1)*(nz+1),MPI_REAL,left,tag,aax(nx+1,1:ny+1,1:nz+1),(ny+1)*(nz+1),MPI_REAL,right,tag,comm,stat,ierr)
-    
+
           call MPI_SENDRECV(aay(nx,1:ny,1:nz+1),ny*(nz+1),MPI_REAL,right,tag,aay(0,1:ny,1:nz+1),ny*(nz+1),MPI_REAL,left,tag,comm,stat,ierr)
           call MPI_SENDRECV(aay(1:2,1:ny,1:nz+1),2*ny*(nz+1),MPI_REAL,left,tag,aay(nx+1:nx+2,1:ny,1:nz+1),2*ny*(nz+1),MPI_REAL,right,tag,comm,stat,ierr)
-  
+
           call MPI_SENDRECV(aaz(nx,1:ny+1,1:nz),(ny+1)*nz,MPI_REAL,right,tag,aaz(0,1:ny+1,1:nz),(ny+1)*nz,MPI_REAL,left,tag,comm,stat,ierr)
           call MPI_SENDRECV(aaz(1:2,1:ny+1,1:nz),2*(ny+1)*nz,MPI_REAL,left,tag,aaz(nx+1:nx+2,1:ny+1,1:nz),2*(ny+1)*nz,MPI_REAL,right,tag,comm,stat,ierr)
     endif
@@ -465,8 +465,8 @@ do while (t .lt. 1.) ! loop until time has reached 1
        call MPI_SENDRECV(aaz(0:nx+2,ny,1:nz),(nx+3)*nz,MPI_REAL,up,tag,aaz(0:nx+2,0,1:nz),(nx+3)*nz,MPI_REAL,down,tag,comm,stat,ierr)
        call MPI_SENDRECV(aaz(0:nx+2,1:2,1:nz),2*(nx+3)*nz,MPI_REAL,down,tag,aaz(0:nx+2,ny+1:ny+2,1:nz),2*(nx+3)*nz,MPI_REAL,up,tag,comm,stat,ierr)
 
-      
-       
+
+
        if (up .eq. MPI_PROC_NULL ) then
             aax(0:nx+1,ny+2,1:nz+1) = 0.0
             aay(0:nx+2,ny+1,1:nz+1) = 0.0
@@ -490,20 +490,20 @@ do while (t .lt. 1.) ! loop until time has reached 1
             aay(0,1:ny+1,1:nz+1) = 0.0
             aaz(0,1:ny+2,1:nz) = 0.0
        endif
-       
+
        !correction to Ay ghost cells if periodic and open BCs are used.
-  if (periodic .eq. 1 .and. open .eq. 1) then    
+  if (periodic .eq. 1 .and. open .eq. 1) then
 	if (coords(1) .eq. 0) then !left most processors
 	  aay(0,:,:)=aay(0,:,:)-nxglobal*delx*(imb*t+totimb)
 	endif
-	
+
 	if (coords(1) .eq. nproc(1)-1) then !right most processors
 	  aay(nx+1,:,:)=aay(nx+1,:,:) +nxglobal*delx*(imb*t+totimb)
 	  aay(nx+2,:,:)=aay(nx+2,:,:) +nxglobal*delx*(imb*t+totimb)
 	endif
-  endif  
+  endif
 
-!########################################################       
+!########################################################
 !Calculate and write diagnostic data to file
 !########################################################
 
@@ -521,7 +521,7 @@ do while (t .lt. 1.) ! loop until time has reached 1
 
       bxbase=bx(:,:,2)
       bybase=by(:,:,2)
-    
+
       exbase=-0.5*(daax(0:nx,1:ny+1)+daax(1:nx+1,1:ny+1))
       eybase=-0.5*(daay(1:nx+1,0:ny)+daay(1:nx+1,1:ny+1))
 
@@ -562,25 +562,25 @@ do while (t .lt. 1.) ! loop until time has reached 1
 	ccx(2:nx+1,:,:) = (alpha(2:nx+1,:,:)-alpha(1:nx,:,:))/delx
 	ccx(1,:,:) = ccx(2,:,:)
 	ccx(nx+2,:,:) = ccx(nx+1,:,:)
-	
+
 	ccy(:,2:ny+1,:) = (alpha(:,2:ny+1,:)-alpha(:,1:ny,:))/dely
 	ccy(:,1,:) = ccy(:,2,:)
 	ccx(:,ny+2,:) = ccx(:,ny+1,:)
-	
+
 	ccz(:,:,2:nz+1) = (alpha(:,:,2:nz+1)-alpha(:,:,1:nz))/delz
 	ccz(:,:,1) = ccz(:,:,2)
 	ccz(:,:,nz+2) = ccz(:,:,nz+1)
-	
+
 	!|grad alpha|^2
 	alpha(:,:,:) = (ccx(1:nx+1,:,:)+ccx(2:nx+2,:,:))**2/4. &
 		    + (ccy(:,1:ny+1,:)+ccy(:,2:ny+1,:))**2/4. &
 		    + (ccz(:,:,1:nz+1)+ccz(:,:,2:nz+2))**2/4.
-	
+
 	alpha = alpha*bb*eta4
-	
-	
+
+
 	localhyper=sum(abs(alpha(1:nx,1:ny,1:nz+1)))*delx**3/4./pi
-      else 
+      else
         localhyper=0.
       endif
       CALL MPI_ALLREDUCE(localhyper,globalhyper,1,MPI_Real,MPI_SUM,MPI_COMM_WORLD,ierr)
@@ -613,7 +613,7 @@ do while (t .lt. 1.) ! loop until time has reached 1
       !                 Determine timestep
       !####################################################
 
-      !determine minimum cell crossing time for advection and diffusion terms 
+      !determine minimum cell crossing time for advection and diffusion terms
 
       localmin=minval( (/ delx/maxval(vx),&
 			  dely/maxval(vy),&
@@ -625,22 +625,21 @@ do while (t .lt. 1.) ! loop until time has reached 1
       CALL MPI_ALLREDUCE(localMin,globalMin,1,MPI_Real,MPI_MIN,MPI_COMM_WORLD,ierr)
 
       !set timestep
-	
+
 	dt=globalmin*0.2
-	
+
 	if (dt .lt. basedt*1.e-3) dt=1.e-3*basedt !if timestep is too small, set to 0.001*basedt
-	if (t .gt. 1.) exit 
+	if (t .gt. 1.) exit
 	if (1.-t .lt. dt) dt=1.-t+1.e-3*basedt !if timestep is large enough to increase t above 1 then set dt to make t=1
-    
-   
-   
-       
+
+
+
+
 enddo
 
 
 
 
 end subroutine step
-  
-end module cal
 
+end module cal
