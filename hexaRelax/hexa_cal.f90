@@ -60,46 +60,83 @@ module cal
     endif
 
     ! apkp - start
-    DO WHILE (t .LT. 1.) ! loop until time has reached 1
+    do while (t .lt. 1.) ! loop until time has reached 1
 
-      IF (rank .EQ. rankstart) THEN
-        PRINT*, 'time =', time, 'dt =', dt, 'basedt =', basedt, &
-                'dt / basedt =', dt / basedt
-      END IF
+      if (rank .eq. rankstart) then
+        PRINT*,'time =',time,'dt =',dt,'basedt =',basedt, &
+                'dt/basedt =',dt/basedt
+      end if
 
-      t = t + dt
-      time = time + dt
+      t=t+dt
+      time=time+dt
 
-      aax(0:nx+1,0:ny+2,1) = aax(0:nx+1,0:ny+2,1) + daax(0:nx+1,0:ny+2) * dt
-      aay(0:nx+2,0:ny+1,1) = aay(0:nx+2,0:ny+1,1) + daay(0:nx+2,0:ny+1) * dt
+      aax(0:nx+1,0:ny+2,1)=aax(0:nx+1,0:ny+2,1)+daax(0:nx+1,0:ny+2)*dt
+      aay(0:nx+2,0:ny+1,1)=aay(0:nx+2,0:ny+1,1)+daay(0:nx+2,0:ny+1)*dt
 
       ! Apply boundary conditions
 
-      ! Bx boundary conditions
+      ! Bz boundary condtions
 
-      IF (down .EQ. MPI_PROC_NULL) THEN
-        bbx(1:nx+1,   1,2:nz+1) = bbx(1:nx+1,   2,2:nz+1)
-      ENDIF
-      IF (up   .EQ. MPI_PROC_NULL) THEN
-        bbx(1:nx+1,ny+2,2:nz+1) = bbx(1:nx+1,ny+1,2:nz+1)
-      ENDIF
-
-      bbx(1:nx+1,1:ny+2,1) = bbx(1:nx+1,1:ny+2,2) - &
-        delz / delx * (bbz(2:nx+2,1:ny+2,1) - bbz(1:nx+1,1:ny+2,1))
-
-      if (open .eq. 1) then
-          bbx(1:nx+1,1:ny+2,nz+2) = bbx(1:nx+1,1:ny+2,nz+1) -
-            delz / delx * (bbz(1:nx+1,1:ny+2,nz+1) - bbz(2:nx+2,1:ny+2,nz+1))
-      else
-          bbx(1:nx+1,1:ny+2,nz+2) = bbx(1:nx+1,1:ny+2,nz+1)
-      endif
-
-      ! Calculate Bz at the z = z_min boundary
+      ! z = z_min
       bbz(1:nx+2,1:ny+2,1)=  &
          (aay(1:nx+2,0:ny+1,1) - aay(0:nx+1,0:ny+1,1)) / delx  &
         -(aax(0:nx+1,1:ny+2,1) - aax(0:nx+1,0:ny+1,1)) / dely
 
-    END DO
+      ! y = y_min, y = y_max
+      if (down .eq. MPI_PROC_NULL) then
+        bbz(1:nx+2,   1,1:nz+1)=bbz(1:nx+2,   2,1:nz+1)
+      endif
+      if (up .eq. MPI_PROC_NULL) then
+        bbz(1:nx+2,ny+2,1:nz+1)=bbz(1:nx+2,ny+1,1:nz+1)
+      endif
+
+      ! x = x_min, x = x_max
+      if (left .eq. MPI_PROC_NULL) then
+        bbz(1,1:ny+2,1:nz+1)=bbz(2,1:ny+2,1:nz+1)
+      endif
+      if (right .eq. MPI_PROC_NULL) then
+        bbz(nx+2,1:ny+2,1:nz+1)=bbz(nx+1,1:ny+2,1:nz+1)
+      endif
+
+      ! Bx boundary conditions
+
+      ! y = y_min, y = y_max
+      if (down .eq.MPI_PROC_NULL ) then
+        bbx(1:nx+1,   1,2:nz+1)=bbx(1:nx+1,   2,2:nz+1)
+      endif
+      if (up .eq. MPI_PROC_NULL) then
+        bbx(1:nx+1,ny+2,2:nz+1)=bbx(1:nx+1,ny+1,2:nz+1)
+      endif
+
+      ! z = z_min, z = z_max
+      bbx(1:nx+1,1:ny+2,   1)=bbx(1:nx+1,1:ny+2,   2)  &
+           -delz/delx*(bbz(2:nx+2,1:ny+2,1)-bbz(1:nx+1,1:ny+2,1))
+      if (open .eq. 1) then
+          bbx(1:nx+1,1:ny+2,nz+2) = (bbz(2:nx+2,1:ny+2,nz+1) - bbz(1:nx+1,1:ny+2,nz+1))*delz/delx + bbx(1:nx+1,1:ny+2,nz+1)
+      else
+          bbx(1:nx+1,1:ny+2,nz+2)=bbx(1:nx+1,1:ny+2,nz+1)
+      endif
+
+      ! By boundary conditions
+
+      ! x = x_min, x = x_max
+      if (right .eq.MPI_PROC_NULL ) then
+        bby(nx+2, 1:ny+1,2:nz+1)=bby(nx+1, 1:ny+1,2:nz+1)
+      endif
+      if (left .eq. MPI_PROC_NULL) then
+        bby(1,1:ny+1,2:nz+1)=bby(2,1:ny+1,2:nz+1)
+      endif
+
+      ! z = z_min, z = z_max
+      bby(1:nx+2,1:ny+1,   1)=bby(1:nx+2,1:ny+1,   2)  &
+           -delz/dely*(bbz(1:nx+2,2:ny+2,1)-bbz(1:nx+2,1:ny+1,1))
+      if (open .eq. 1) then
+         bby(1:nx+2,1:ny+1,nz+2) = (bbz(1:nx+2,2:ny+2,nz+1) - bbz(1:nx+2,1:ny+1,nz+1))*delz/dely + bby(1:nx+2,1:ny+1,nz+1)
+      else
+         bby(1:nx+2,1:ny+1,nz+2)=bby(1:nx+2,1:ny+1,nz+1)
+      endif
+
+    end do
     ! apkp - end
 
 do while (t .lt. 1.) ! loop until time has reached 1

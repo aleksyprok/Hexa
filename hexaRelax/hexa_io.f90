@@ -363,6 +363,94 @@ endif
     real, dimension(:,:,:), allocatable :: aax_global, aay_global, aaz_global
     integer, dimension(mpidir) :: dumcord
 
+    ! apkp - s
+    real, dimension(:,:,:), allocatable :: bbx_global, bby_global, bbz_global
+
+    if (tp .eq. '3d') then
+
+      if (rank .eq. rankstart) then
+        allocate(aax_global(nxglobal,nyglobal+1,nzglobal+1))
+        allocate(aay_global(nxglobal+1,nyglobal,nzglobal+1))
+        allocate(aaz_global(nxglobal+1,nyglobal+1,nzglobal))
+
+        aax_global(1:nx,1:ny+1,1:nz+1) = aax(1:nx,1:ny+1,1:nz+1)
+        aay_global(1:nx+1,1:ny,1:nz+1) = aay(1:nx+1,1:ny,1:nz+1)
+        aaz_global(1:nx+1,1:ny+1,1:nz) = aaz(1:nx+1,1:ny+1,1:nz)
+      endif
+
+       if (rank .ne. rankstart) then
+            if ( coords(2) .ne. nproc(2)-1) then
+                 if (coords(1) .ne. nproc(1)-1) then
+                     CALL MPI_SEND(aax(1:nx,1:ny,1:nz+1),nx*ny*(nz+1),MPI_REAL,rankstart,tag,comm,ierr)
+                     CALL MPI_SEND(aay(1:nx,1:ny,1:nz+1),nx*ny*(nz+1),MPI_REAL,rankstart,tag,comm,ierr)
+                     CALL MPI_SEND(aaz(1:nx,1:ny,1:nz),nx*ny*nz,MPI_REAL,rankstart,tag,comm,ierr)
+                 else
+                     CALL MPI_SEND(aax(1:nx,1:ny,1:nz+1),nx*ny*(nz+1),MPI_REAL,rankstart,tag,comm,ierr)
+                     CALL MPI_SEND(aay(1:nx+1,1:ny,1:nz+1),(nx+1)*ny*(nz+1),MPI_REAL,rankstart,tag,comm,ierr)
+                     CALL MPI_SEND(aaz(1:nx+1,1:ny,1:nz),(nx+1)*ny*nz,MPI_REAL,rankstart,tag,comm,ierr)
+                 endif
+           else
+                if (coords(1) .ne. nproc(1)-1) then
+                     CALL MPI_SEND(aax(1:nx,1:ny+1,1:nz+1),nx*(ny+1)*(nz+1),MPI_REAL,rankstart,tag,comm,ierr)
+                     CALL MPI_SEND(aay(1:nx,1:ny,1:nz+1),nx*ny*(nz+1),MPI_REAL,rankstart,tag,comm,ierr)
+                     CALL MPI_SEND(aaz(1:nx,1:ny+1,1:nz),nx*(ny+1)*nz,MPI_REAL,rankstart,tag,comm,ierr)
+                 else
+                     CALL MPI_SEND(aax(1:nx,1:ny+1,1:nz+1),nx*(ny+1)*(nz+1),MPI_REAL,rankstart,tag,comm,ierr)
+                     CALL MPI_SEND(aay(1:nx+1,1:ny,1:nz+1),(nx+1)*ny*(nz+1),MPI_REAL,rankstart,tag,comm,ierr)
+                     CALL MPI_SEND(aaz(1:nx+1,1:ny+1,1:nz),(nx+1)*(ny+1)*nz,MPI_REAL,rankstart,tag,comm,ierr)
+                 endif
+           endif
+     else
+
+         do j=0,nproc(2)-1
+             do i=0,nproc(1)-1
+                dumcord(1) = i
+                dumcord(2) = j
+                CALL MPI_CART_RANK(comm,dumcord,nextrank,ierr)
+                if (nextrank .ne. rankstart) then
+                    if ( j .ne. nproc(2)-1) then
+                        if (i .ne. nproc(1)-1) then
+                             CALL MPI_RECV(aax_global((i*nx)+1:(i+1)*nx,(j*ny)+1:(j+1)*ny,1:nz+1),nx*ny*(nz+1),MPI_REAL,nextrank,tag,comm,stat,ierr)
+                             CALL MPI_RECV(aay_global((i*nx)+1:(i+1)*nx,(j*ny)+1:(j+1)*ny,1:nz+1),nx*ny*(nz+1),MPI_REAL,nextrank,tag,comm,stat,ierr)
+                             CALL MPI_RECV(aaz_global((i*nx)+1:(i+1)*nx,(j*ny)+1:(j+1)*ny,1:nz),nx*ny*nz,MPI_REAL,nextrank,tag,comm,stat,ierr)
+                        else
+                             CALL MPI_RECV(aax_global((i*nx)+1:(i+1)*nx,(j*ny)+1:(j+1)*ny,1:nz+1),nx*ny*(nz+1),MPI_REAL,nextrank,tag,comm,stat,ierr)
+                             CALL MPI_RECV(aay_global((i*nx)+1:(i+1)*nx+1,(j*ny)+1:(j+1)*ny,1:nz+1),(nx+1)*ny*(nz+1),MPI_REAL,nextrank,tag,comm,stat,ierr)
+                             CALL MPI_RECV(aaz_global((i*nx)+1:(i+1)*nx+1,(j*ny)+1:(j+1)*ny,1:nz),(nx+1)*ny*nz,MPI_REAL,nextrank,tag,comm,stat,ierr)
+                        endif
+                   else
+                        if (i .ne. nproc(1)-1) then
+                             CALL MPI_RECV(aax_global((i*nx)+1:(i+1)*nx,(j*ny)+1:(j+1)*ny+1,1:nz+1),nx*(ny+1)*(nz+1),MPI_REAL,nextrank,tag,comm,stat,ierr)
+                             CALL MPI_RECV(aay_global((i*nx)+1:(i+1)*nx,(j*ny)+1:(j+1)*ny,1:nz+1),nx*ny*(nz+1),MPI_REAL,nextrank,tag,comm,stat,ierr)
+                             CALL MPI_RECV(aaz_global((i*nx)+1:(i+1)*nx,(j*ny)+1:(j+1)*ny+1,1:nz),nx*(ny+1)*nz,MPI_REAL,nextrank,tag,comm,stat,ierr)
+                        else
+                             CALL MPI_RECV(aax_global((i*nx)+1:(i+1)*nx,(j*ny)+1:(j+1)*ny+1,1:nz+1),nx*(ny+1)*(nz+1),MPI_REAL,nextrank,tag,comm,stat,ierr)
+                             CALL MPI_RECV(aay_global((i*nx)+1:(i+1)*nx+1,(j*ny)+1:(j+1)*ny,1:nz+1),(nx+1)*ny*(nz+1),MPI_REAL,nextrank,tag,comm,stat,ierr)
+                             CALL MPI_RECV(aaz_global((i*nx)+1:(i+1)*nx+1,(j*ny)+1:(j+1)*ny+1,1:nz),(nx+1)*(ny+1)*nz,MPI_REAL,nextrank,tag,comm,stat,ierr)
+                        endif
+                    endif
+                endif
+             enddo
+         enddo
+      endif
+
+       if (rank .eq. rankstart) then
+
+          write (filename,fmt='(a,"/",a,"_",i5.5,"p")')  &     ! *** Mac
+              dir(1:length(dir,30)),root(1:length(root,10)),nt
+          print *,'Saving model on file '//filename
+         open(unit=1,file=filename,form='unformatted',status='unknown')
+         write (1) opt
+         write (1) (((aax_global(i,j,k),i=1,nxglobal  ),j=1,nyglobal+1),k=1,nzglobal+1)
+         write (1) (((aay_global(i,j,k),i=1,nxglobal+1),j=1,nyglobal  ),k=1,nzglobal+1)
+         write (1) (((aaz_global(i,j,k),i=1,nxglobal+1),j=1,nyglobal+1),k=1,nzglobal  )
+         close(1)
+
+         deallocate(aax_global,aay_global,aaz_global)
+       endif
+    endif
+    ! apkp - e
+
 
     if (tp .eq. '3d') then
 
