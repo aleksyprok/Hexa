@@ -215,11 +215,6 @@ end subroutine setup_param
     allocate(cx(nx+1,ny+1,nz+1),cy(nx+1,ny+1,nz+1),cz(nx+1,ny+1,nz+1))
     allocate(vx(nx+1,ny+1,nz+1),vy(nx+1,ny+1,nz+1),vz(nx+1,ny+1,nz+1))
 
-    ! apkp - start
-    allocate(bbx0(nx + 1, ny + 2, ntmax))
-    allocate(bby0(nx + 2, ny + 1, ntmax))
-    ! apkp - end
-
     if (open .eq. 1) then !allocate flux correction array
       allocate(ay_corr(0:nx+2,0:ny+1,nz+1))
     endif
@@ -239,10 +234,6 @@ end subroutine setup_param
     deallocate(bb,bbm,ch)
     deallocate(cx,cy,cz)
     deallocate(vx,vy,vz)
-
-    ! apkp - start
-    deallocate(bbx0, bby0)
-    ! apkp - end
 
   end subroutine arraydealoc
 

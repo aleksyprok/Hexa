@@ -32,10 +32,6 @@ module var_global
   real, dimension(:,:,:), allocatable :: bbx
   real, dimension(:,:,:), allocatable :: bby
   real, dimension(:,:,:), allocatable :: bbz
-  ! apkp - start
-  real, dimension(:,:,:), allocatable :: bbx0
-  real, dimension(:,:,:), allocatable :: bby0
-  ! apkp - end
 
   real, dimension(:,:,:), allocatable :: ccx
   real, dimension(:,:,:), allocatable :: ccy
