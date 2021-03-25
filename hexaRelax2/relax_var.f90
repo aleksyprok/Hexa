@@ -13,6 +13,14 @@ MODULE var_global
   ! Number of cells (not corners):
   INTEGER :: nxglobal, nyglobal, nzglobal
   INTEGER :: nx, ny, nz
+  INTEGER :: periodic
+
+  ! File and directory names
+  CHARACTER (LEN = *), PARAMETER :: potential_field_file = 'run1/poten_00003p'
+  CHARACTER (LEN = *), PARAMETER :: evolution_field_file = 'run1/run1_00003p'
+  CHARACTER (LEN = *), PARAMETER :: parameters_file      = 'run1/param1'
+  CHARACTER (LEN = *), PARAMETER :: setup_file           = 'run1/run1_setup'
+  CHARACTER (LEN = *), PARAMETER :: output_dir           = 'run1'
 
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: bbx, bby, bbz, bx, by, bz, bb
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: ccx, ccy, ccz, cx, cy, cz
@@ -22,5 +30,8 @@ MODULE var_global
   ! variables associated with MPI
   INTEGER :: mpisize, ierr, rank, comm
   INTEGER :: left, right, up, down, nextrank, rankstart, rankend
+  INTEGER, PARAMETER :: mpidir = 2
+  INTEGER, DIMENSION(mpidir) :: dims, nproc, coords
+  LOGICAL, DIMENSION(mpidir) :: periods
 
 END MODULE var_global
