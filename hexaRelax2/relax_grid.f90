@@ -8,26 +8,20 @@ CONTAINS
 
   SUBROUTINE grid_setup
 
-    !
-    ! Determine sub array division of global arrays.
-    ! USE MPI routine to split up  grid - dims gives number of processes in
-    ! each di rection.
-
-      call MPI_DIMS_CREATE(mpisize,mpidir,dims,ierr)
+      CALL MPI_DIMS_CREATE(mpisize, mpidir, dims, ierr)
       nproc = dims
-      print*,mpisize,mpidir,dims,ierr,nproc
+      PRINT*, mpisize, mpidir, dims, ierr, nproc
 
-    ! USE MPI routine to define cartesian grid.
+      IF (periodic .EQ. 1) THEN
+        periods(1) = .TRUE.
+        periods(2) = .TRUE.
+        PRINT*, 'PERIODIC'
+      ELSE
+        periods(1) = .FALSE.
+        periods(2) = .FALSE.
+        PRINT*, 'CLOSED'
+      END IF
 
-      ! if (periodic .eq. 1) then
-      !   periods(1)=.true.
-      !   periods(2)=.true.
-      !   print *, 'PERIODIC'
-      ! else
-      !   periods(1)=.false.
-      !   periods(2)=.false.
-      !   print *, 'CLOSED'
-      ! endif
 
 
     ! sets of cartesian geometry with boundaries and places communicator in index comm.
@@ -42,47 +36,45 @@ CONTAINS
 
   END SUBROUTINE grid_setup
 
-  ! SUBROUTINE setup_param
-  !
-  !     IF (rank .EQ. 0) THEN
-  !
-  !       print*, 'Read model parameters: ', setup_file
-  !       OPEN(UNIT = 3, &
-  !            FILE = setup_file, &
-  !            FORM = 'FORMATTED', &
-  !            STATUS = 'OLD')
-  !       vsetup=get_value(3,'vsetup')    ! setup file version
-  !       nmajor=get_value(3,'nmajor')
-  !       nstrt  =get_value(3,'nstrt')
-  !       nend  =get_value(3,'nend')
-  !       etaia  =get_value(3,'etaia')
-  !       eta4a  =get_value(3,'eta4a')
-  !       periodic =get_value(3,'periodic')
-  !       open=get_value(3,'open')
-  !
-  !       close(3)
-  !
-  !       print *,'nmajor=',nmajor
-  !       print *,'nstrt=',nstrt
-  !       print *,'nend =',nend
-  !       print *,'etaia =',etaia
-  !       print *,'eta4a =',eta4a
-  !       print *,'periodic=',periodic
-  !       print *, 'open =',open
-  !
-  !    endif
-  !
-  !   CALL MPI_BCAST(vsetup,1,MPI_INTEGER,0,comm,ierr)
-  !   CALL MPI_BCAST(nmajor,1,MPI_INTEGER,0,comm,ierr)
-  !   CALL MPI_BCAST(nminor,1,MPI_INTEGER,0,comm,ierr)
-  !
-  !   CALL MPI_BCAST(nstrt,1,MPI_INTEGER,0,comm,ierr)
-  !   CALL MPI_BCAST(nend,1,MPI_INTEGER,0,comm,ierr)
-  !   CALL MPI_BCAST(etaia,1,MPI_REAL,0,comm,ierr)
-  !   CALL MPI_BCAST(eta4a,1,MPI_REAL,0,comm,ierr)
-  !   CALL MPI_BCAST(periodic,1,MPI_INTEGER,0,comm,ierr)
-  !   CALL MPI_BCAST(open,1,MPI_INTEGER,0,comm,ierr)
-  !
-  ! END SUBROUTINE setup_param
+  SUBROUTINE setup_param
+
+    ! This subroutine reads the setup file to check if periodic / open
+    ! boundary conditions are used.
+
+    ! Dummy strings (used to read file)
+    CHARACTER (LEN = 10) :: s1
+    CHARACTER (LEN = 6 ) :: s2
+    INTEGER :: i
+
+    IF (rank .EQ. 0) THEN
+
+      OPEN(UNIT   = 42, &
+           FILE   = setup_file, &
+           FORM   = 'FORMATTED', &
+           STATUS = 'OLD', &
+           ACTION = 'READ')
+
+      ! Skip first 6 lines of file
+      DO i = 1, 6
+        READ(42, *)
+      END DO
+
+      ! Read periodic and open values
+      READ(42, *) s1
+      READ(42, *) s2
+
+      ! Get integer values from the strings
+      READ(s1(10:10), *) periodic
+      READ(s2(6:6)  , *) open
+
+      CLOSE(42)
+
+      CALL MPI_BCAST(periodic, 1, MPI_INTEGER, 0, comm,ierr)
+      CALL MPI_BCAST(open    , 1, MPI_INTEGER, 0, comm,ierr)
+
+    END IF
+
+  END SUBROUTINE setup_param
+
 
 END MODULE grid

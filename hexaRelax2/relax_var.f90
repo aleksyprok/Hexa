@@ -13,7 +13,7 @@ MODULE var_global
   ! Number of cells (not corners):
   INTEGER :: nxglobal, nyglobal, nzglobal
   INTEGER :: nx, ny, nz
-  INTEGER :: periodic
+  INTEGER :: periodic, open
 
   ! File and directory names
   CHARACTER (LEN = *), PARAMETER :: potential_field_file = 'run1/poten_00003p'
