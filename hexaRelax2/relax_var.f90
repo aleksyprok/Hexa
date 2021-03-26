@@ -13,6 +13,7 @@ MODULE var_global
   ! Number of cells (not corners):
   INTEGER :: nxglobal, nyglobal, nzglobal
   INTEGER :: nx, ny, nz
+
   INTEGER :: periodic, open
 
   ! File and directory names
@@ -27,11 +28,15 @@ MODULE var_global
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: eex, eey, eez, ex, ey, ez
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: vx, vy, vz
 
-  ! variables associated with MPI
+  ! Variables associated with MPI
   INTEGER :: mpisize, ierr, rank, comm
   INTEGER :: left, right, up, down, nextrank, rankstart, rankend
   INTEGER, PARAMETER :: mpidir = 2
-  INTEGER, DIMENSION(mpidir) :: dims, nproc, coords
+  INTEGER, DIMENSION(mpidir) :: nproc, coords
   LOGICAL, DIMENSION(mpidir) :: periods
+
+  ! Variables associated with length and time
+  REAL :: length_cm !length of one Hexa length unit in cm
+  REAL :: time_s !time of one hexa time unit in seconds
 
 END MODULE var_global
