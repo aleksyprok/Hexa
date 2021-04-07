@@ -21,6 +21,7 @@ CONTAINS
       periods(2) = .FALSE.
     END IF
 
+    PRINT*, MPI_COMM_WORLD, mpidir, nproc, periods, .TRUE., comm, ierr
     CALL MPI_CART_CREATE(MPI_COMM_WORLD, mpidir, nproc, periods, .TRUE., comm, ierr)
 
     CALL MPI_COMM_RANK(comm, rank, ierr)
@@ -110,6 +111,20 @@ CONTAINS
     CLOSE(42)
 
   END SUBROUTINE setup_param
+
+  SUBROUTINE arrayaloc
+
+    ALLOCATE(aax(nx,   ny+1, nz+1))
+    ALLOCATE(aay(nx+1, ny,   nz+1))
+    ALLOCATE(aaz(nx+1, ny+1, nz  ))
+
+  END SUBROUTINE arrayaloc
+
+  SUBROUTINE arraydealoc
+
+    DEALLOCATE(aax, aay, aaz)
+
+  END SUBROUTINE arraydealoc
 
 
 END MODULE grid
