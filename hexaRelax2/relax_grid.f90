@@ -117,12 +117,16 @@ CONTAINS
     ALLOCATE(aax(nx,   ny+1, nz+1))
     ALLOCATE(aay(nx+1, ny,   nz+1))
     ALLOCATE(aaz(nx+1, ny+1, nz  ))
+    ALLOCATE(bbx(1:nx+1, 0:ny+1, 0:nz+1))
+    ALLOCATE(bby(0:nx+1, 1:ny+1, 0:nz+1))
+    ALLOCATE(bbz(0:nx+1, 0:ny+1, 1:nz+1))
 
   END SUBROUTINE arrayaloc
 
   SUBROUTINE arraydealoc
 
     DEALLOCATE(aax, aay, aaz)
+    DEALLOCATE(bbx, bby, bbz)
 
   END SUBROUTINE arraydealoc
 

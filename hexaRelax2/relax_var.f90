@@ -29,6 +29,8 @@ MODULE var_global
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: eex, eey, eez, ex, ey, ez
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: vx, vy, vz
 
+  REAL, DIMENSION(:, :), ALLOCATABLE :: bbx0, bby0
+
   ! Variables associated with MPI
   INTEGER :: mpisize, ierr, rank, comm
   INTEGER :: left, right, up, down, nextrank, rankstart, rankend

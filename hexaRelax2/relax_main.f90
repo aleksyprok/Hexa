@@ -15,7 +15,8 @@ PROGRAM relax
 
   CALL arrayaloc ! Allocates arrays
 
-  CALL readdata(potential_field_file)
+  CALL readdata(evolution_field_file)
+  CALL readdata(potential_field_file) ! Read in initial A
 
   CALL MPI_BARRIER(comm, ierr)
 

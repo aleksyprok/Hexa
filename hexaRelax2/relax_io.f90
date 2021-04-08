@@ -78,6 +78,8 @@ CONTAINS
 
     END IF
 
+    DEALLOCATE(aax_global, aay_global, aaz_global)
+
   END SUBROUTINE readdata
 
 END MODULE io
