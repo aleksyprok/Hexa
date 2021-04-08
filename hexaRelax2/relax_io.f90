@@ -80,7 +80,21 @@ CONTAINS
 
   END SUBROUTINE readdata
 
-  SUBROUTINE writedata
+  SUBROUTINE writedata(n)
+
+    INTEGER, INTENT(IN) :: n
+    REAL, DIMENSION(:,:,:), ALLOCATABLE :: bbx_global, bby_global, bbz_global
+
+    IF (rank .EQ. rankstart) THEN
+
+       ALLOCATE(bbx_global(1:nxglobal+1, 0:nyglobal+1, 0:nzglobal+1))
+       ALLOCATE(bby_global(0:nxglobal+1, 1:nyglobal+1, 0:nzglobal+1))
+       ALLOCATE(bbz_global(0:nxglobal+1, 0:nyglobal+1, 1:nzglobal+1))
+
+       aax_global(1:nx,1:ny+1,1:nz+1) = aax(1:nx,1:ny+1,1:nz+1)
+       aay_global(1:nx+1,1:ny,1:nz+1) = aay(1:nx+1,1:ny,1:nz+1)
+       aaz_global(1:nx+1,1:ny+1,1:nz)   = aaz(1:nx+1,1:ny+1,1:nz)
+    ENDIF
 
   END SUBROUTINE writedata
 
