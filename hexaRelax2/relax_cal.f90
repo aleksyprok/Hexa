@@ -14,6 +14,8 @@ CONTAINS
 
     CALL readdata(evolution_field_file)
 
+    ! Calculate bbx0
+
     bbx1(:, 1:ny) =  &
         (aaz(:, 2:ny+1, 1) - aaz(:, 1:ny, 1)) / dely  &
       - (aay(:, :     , 2) - aay(:, :   , 1)) / delz
@@ -28,8 +30,14 @@ CONTAINS
     ! Apply boundary conditions
     IF (down .EQ. MPI_PROC_NULL) bbx1(:, 0   ) = bbx1(:, 1 )
     IF (up   .EQ. MPI_PROC_NULL) bbx1(:, ny+1) = bbx1(:, ny)
-    
+
     bbx0 = bbx1
+
+    ! Calculate bby0
+
+    bby1(1:nx, :) =  &
+        (aaz(:, 2:ny+1, 1) - aaz(:, 1:ny, 1)) / dely  &
+      - (aay(:, :     , 2) - aay(:, :   , 1)) / delz
 
   END SUBROUTINE calc_boundary_field
 
