@@ -78,12 +78,18 @@ CONTAINS
 
     END IF
 
+    IF (rank .EQ. rankstart) THEN
+      DEALLOCATE(aax_global, aay_global, aaz_global)
+    ENDIF
+
   END SUBROUTINE readdata
 
   SUBROUTINE writedata(n)
 
     INTEGER, INTENT(IN) :: n
     REAL, DIMENSION(:,:,:), ALLOCATABLE :: bbx_global, bby_global, bbz_global
+    INTEGER, DIMENSION(mpidir) :: dumcord
+    INTEGER :: i, j, k, test
 
     IF (rank .EQ. rankstart) THEN
 
@@ -91,9 +97,61 @@ CONTAINS
        ALLOCATE(bby_global(0:nxglobal+1, 1:nyglobal+1, 0:nzglobal+1))
        ALLOCATE(bbz_global(0:nxglobal+1, 0:nyglobal+1, 1:nzglobal+1))
 
-       aax_global(1:nx,1:ny+1,1:nz+1) = aax(1:nx,1:ny+1,1:nz+1)
-       aay_global(1:nx+1,1:ny,1:nz+1) = aay(1:nx+1,1:ny,1:nz+1)
-       aaz_global(1:nx+1,1:ny+1,1:nz)   = aaz(1:nx+1,1:ny+1,1:nz)
+       bbx_global(1:nx+1, 0:ny+1, 0:nz+1) = bbx
+       bby_global(0:nx+1, 1:ny+1, 0:nz+1) = bby
+       bbz_global(0:nx+1, 0:ny+1, 1:nz+1) = bbz
+
+    END IF
+
+    IF(rank .NE. rankstart) THEN
+
+      CALL MPI_SEND(bbx, (nx + 1) * (ny + 2) * (nz + 2), MPI_REAL, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(bby, (nx + 2) * (ny + 1) * (nz + 2), MPI_REAL, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(bbz, (nx + 2) * (ny + 2) * (nz + 1), MPI_REAL, rankstart, tag, comm, ierr)
+
+    ELSE
+
+      DO j = 0, nproc(2) - 1
+        DO i = 0, nproc(1) - 1
+          IF ((i .EQ. 0) .AND. (j .EQ. 0)) CYCLE ! Already calculated bb for processor at (0, 0)
+          dumcord(1) = i
+          dumcord(2) = j
+          CALL MPI_CART_RANK(comm, dumcord, nextrank, ierr)
+          CALL MPI_RECV(bbx_global((i * nx) + 1 : (i + 1) * nx + 1, &
+                                   (j * ny)     : (j + 1) * ny + 1, &
+                                   :), &
+                        (nx + 1) * (ny + 2) * (nz + 2), &
+                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+          CALL MPI_RECV(bby_global((i * nx)     : (i + 1) * nx + 1, &
+                                   (j * ny) + 1 : (j + 1) * ny + 1, &
+                                   :), &
+                        (nx + 2) * (ny + 1) * (nz + 2), &
+                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+          CALL MPI_RECV(bbz_global((i * nx) : (i + 1) * nx + 1, &
+                                   (j * ny) : (j + 1) * ny + 1, &
+                                   :), &
+                        (nx + 2) * (ny + 2) * (nz + 1), &
+                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+        END DO
+      END DO
+
+    END IF
+
+    IF (rank .EQ. rankstart) THEN
+
+      WRITE (filename, FMT = '(a, i5.5)')  output_file, n
+
+      OPEN(UNIT = 42, &
+           FILE = FILENAME, &
+           FORM = 'UNFORMATTED', &
+           STATUS = 'UNKNOWN')
+      WRITE (42) (((bbx_global(i,j,k), i = 1, nxglobal + 1), j = 0, nyglobal + 1), k = 0, nzglobal + 1)
+      WRITE (42) (((bby_global(i,j,k), i = 0, nxglobal + 1), j = 1, nyglobal + 1), k = 0, nzglobal + 1)
+      WRITE (42) (((bbz_global(i,j,k), i = 0, nxglobal + 1), j = 0, nyglobal + 1), k = 1, nzglobal + 1)
+      CLOSE (42)
+
+      DEALLOCATE(bbx_global, bby_global, bbz_global)
+
     ENDIF
 
   END SUBROUTINE writedata

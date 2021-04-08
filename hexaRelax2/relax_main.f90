@@ -19,6 +19,8 @@ PROGRAM relax
   CALL calc_boundary_field
   CALL calc_initial_field
 
+  CALL writedata(0)
+
   CALL MPI_BARRIER(comm, ierr)
 
   CALL MPI_FINALIZE(ierr)
