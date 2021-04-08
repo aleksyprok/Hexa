@@ -36,8 +36,18 @@ CONTAINS
     ! Calculate bby0
 
     bby1(1:nx, :) =  &
-        (aaz(:, 2:ny+1, 1) - aaz(:, 1:ny, 1)) / dely  &
-      - (aay(:, :     , 2) - aay(:, :   , 1)) / delz
+        (aax(:,      :, 2) - aax(:,    :, 1)) / delz  &
+      - (aaz(2:nx+1, :, 2) - aaz(1:nx, :, 1)) / delx
+    ! Do horizontal transfer
+    call MPI_SENDRECV(bby1(nx, :), ny + 1, MPI_REAL, right,   tag, &
+                      bby1(0,  :), ny + 1, MPI_REAL, left, tag, &
+                      comm, stat, ierr)
+    call MPI_SENDRECV(bby1(1   , :), ny + 1, MPI_REAL, left, tag, &
+                      bby1(nx+1, :), ny + 1, MPI_REAL, right,   tag, &
+                      comm, stat, ierr)
+    ! Apply boundary conditions
+    IF (down .EQ. MPI_PROC_NULL) bbx1(:, 0   ) = bbx1(:, 1 )
+    IF (up   .EQ. MPI_PROC_NULL) bbx1(:, ny+1) = bbx1(:, ny)
 
   END SUBROUTINE calc_boundary_field
 

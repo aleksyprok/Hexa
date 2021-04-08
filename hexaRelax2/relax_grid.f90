@@ -74,6 +74,7 @@ CONTAINS
         STOP
     ENDIF
 
+    ! Use width of 6 (this is used for legacy reasons)
     delx= 6.0 / nxglobal
     dely= 6.0 / nyglobal
     delz= 6.0 / nzglobal
