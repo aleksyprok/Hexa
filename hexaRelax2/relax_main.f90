@@ -17,6 +17,7 @@ PROGRAM relax
   CALL arrayaloc ! Allocates arrays
 
   CALL calc_boundary_field
+  CALL calc_initial_field
 
   CALL MPI_BARRIER(comm, ierr)
 
