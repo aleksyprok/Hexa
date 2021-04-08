@@ -80,4 +80,8 @@ CONTAINS
 
   END SUBROUTINE readdata
 
+  SUBROUTINE writedata
+
+  END SUBROUTINE writedata
+
 END MODULE io
