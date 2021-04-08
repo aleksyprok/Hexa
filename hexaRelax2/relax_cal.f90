@@ -1,6 +1,7 @@
 MODULE cal
 
   USE var_global
+  USE io
 
   IMPLICIT none
 
@@ -10,6 +11,8 @@ CONTAINS
 
     REAL, DIMENSION(1:nx+1, 0:ny+1) :: bbx1
     REAL, DIMENSION(0:nx+1, 1:ny+1) :: bby1
+
+    CALL readdata(evolution_field_file)
 
     bbx1(:, 1:ny) =  &
         (aaz(:, 2:ny+1, 1) - aaz(:, 1:ny, 1)) / dely  &
@@ -25,7 +28,7 @@ CONTAINS
     ! Apply boundary conditions
     IF (down .EQ. MPI_PROC_NULL) bbx1(:, 0   ) = bbx1(:, 1 )
     IF (up   .EQ. MPI_PROC_NULL) bbx1(:, ny+1) = bbx1(:, ny)
-
+    
     bbx0 = bbx1
 
   END SUBROUTINE calc_boundary_field

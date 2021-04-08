@@ -3,6 +3,7 @@ PROGRAM relax
   USE var_global
   USE grid
   USE io
+  USE cal
 
   IMPLICIT NONE
 
@@ -15,8 +16,7 @@ PROGRAM relax
 
   CALL arrayaloc ! Allocates arrays
 
-  CALL readdata(evolution_field_file)
-  CALL readdata(potential_field_file) ! Read in initial A
+  CALL calc_boundary_field
 
   CALL MPI_BARRIER(comm, ierr)
 
