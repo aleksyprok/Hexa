@@ -145,9 +145,12 @@ CONTAINS
            FILE = FILENAME, &
            FORM = 'UNFORMATTED', &
            STATUS = 'UNKNOWN')
-      WRITE (42) (((bbx_global(i,j,k), i = 1, nxglobal + 1), j = 0, nyglobal + 1), k = 0, nzglobal + 1)
-      WRITE (42) (((bby_global(i,j,k), i = 0, nxglobal + 1), j = 1, nyglobal + 1), k = 0, nzglobal + 1)
-      WRITE (42) (((bbz_global(i,j,k), i = 0, nxglobal + 1), j = 0, nyglobal + 1), k = 1, nzglobal + 1)
+      ! WRITE (42) (((bbx_global(i,j,k), i = 1, nxglobal + 1), j = 0, nyglobal + 1), k = 0, nzglobal + 1)
+      ! WRITE (42) (((bby_global(i,j,k), i = 0, nxglobal + 1), j = 1, nyglobal + 1), k = 0, nzglobal + 1)
+      ! WRITE (42) (((bbz_global(i,j,k), i = 0, nxglobal + 1), j = 0, nyglobal + 1), k = 1, nzglobal + 1)
+      WRITE (42) bbx_global
+      WRITE (42) bby_global
+      WRITE (42) bbz_global
       CLOSE (42)
 
       DEALLOCATE(bbx_global, bby_global, bbz_global)
