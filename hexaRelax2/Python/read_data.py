@@ -22,11 +22,11 @@ aax = file.read_reals('float32').reshape((nz + 1, ny + 1, nx), order = "C")
 aay = file.read_reals('float32').reshape((nz + 1, ny, nx + 1), order = "C")
 aaz = file.read_reals('float32').reshape((nz, ny + 1, nx + 1), order = "C")
 
-bbx_p = (aaz[ :, 1:, :] - aaz[  :, :-1, :]) / dy \
+bbx_a = (aaz[ :, 1:, :] - aaz[  :, :-1, :]) / dy \
       - (aay[1:,  :, :] - aay[:-1,   :, :]) / dz
-bby_p = (aax[1:, :,  :] - aax[:-1, :,   :]) / dz \
+bby_a = (aax[1:, :,  :] - aax[:-1, :,   :]) / dz \
       - (aaz[ :, :, 1:] - aaz[  :, :, :-1]) / dx
-bbz_p = (aay[:,  :, 1:] - aay[0,   :, :-1]) / dx \
+bbz_a = (aay[:,  :, 1:] - aay[0,   :, :-1]) / dx \
       - (aax[:, 1:,  :] - aax[0, :-1,   :]) / dy
 
 fig = plt.figure()
@@ -48,28 +48,35 @@ im = ax.imshow(bbz[0, :, :], origin='lower')
 cb = fig.colorbar(im)
 
 ax = fig.add_subplot(334)
-im = ax.imshow(bbx_p[0, :, :], origin='lower')
+im = ax.imshow(bbx_a[0, :, :], origin='lower')
 cb = fig.colorbar(im)
 
 ax = fig.add_subplot(335)
-im = ax.imshow(bby_p[0, :, :], origin='lower')
+im = ax.imshow(bby_a[0, :, :], origin='lower')
 cb = fig.colorbar(im)
 
 ax = fig.add_subplot(336)
-im = ax.imshow(bbz_p[0, :, :], origin='lower')
+im = ax.imshow(bbz_a[0, :, :], origin='lower')
 cb = fig.colorbar(im)
 
 ax = fig.add_subplot(337)
-im = ax.imshow(bbx[1, 1:-1, :] - bbx_p[0, :, :], origin='lower')
+im = ax.imshow(bbx[1, 1:-1, :] - bbx_a[0, :, :], origin='lower')
 cb = fig.colorbar(im)
 
 ax = fig.add_subplot(338)
-im = ax.imshow(bby[1, :, 1:-1] - bby_p[0, :, :], origin='lower')
+im = ax.imshow(bby[1, :, 1:-1] - bby_a[0, :, :], origin='lower')
 cb = fig.colorbar(im)
 
 ax = fig.add_subplot(339)
-im = ax.imshow(bbz[0, 1:-1, 1:-1] - bbz_p[0, :, :], origin='lower')
+im = ax.imshow(bbz[0, 1:-1, 1:-1] - bbz_a[0, :, :], origin='lower')
 cb = fig.colorbar(im)
 
+print(bbx[1, 1:-1, :] - bbx_a[0, :, :])
+print(bby[1, :, 1:-1] - bby_a[0, :, :])
+print(bbz[0, 1:-1, 1:-1] - bbz_a[0, :, :])
+
+print(np.amax(np.abs(bbx[1, 1:-1, :] - bbx_a[0, :, :])))
+print(np.amax(np.abs(bby[1, :, 1:-1] - bby_a[0, :, :])))
+print(np.amax(np.abs(bbz[0, 1:-1, 1:-1] - bbz_a[0, :, :])))
 
 plt.show()
