@@ -29,14 +29,11 @@ CONTAINS
     CALL MPI_CART_COORDS(comm, rank, mpidir, coords, ierr)
 
     CALL MPI_GET_PROCESSOR_NAME(procname, namelen, ierr)
-    ! PRINT*, rank, procname(1:namelen), coords(1), coords(2)
 
     CALL MPI_BARRIER(comm, ierr)
 
     CALL MPI_CART_SHIFT(comm, 0, 1, left, right, ierr)
     CALL MPI_CART_SHIFT(comm, 1, 1, down, up, ierr)
-    ! PRINT*, 'Left/right', left, rank, right
-    ! PRINT*, 'Up/down', down, rank, up
 
     ! Get rank of process at (0,0)
     CALL MPI_CART_RANK(comm, (/0, 0/), rankstart, ierr)
@@ -76,6 +73,11 @@ CONTAINS
         CALL MPI_FINALIZE(ierr)
         STOP
     ENDIF
+
+    ! Use width of 6 (this is used for legacy reasons)
+    delx= 6.0 / nxglobal
+    dely= 6.0 / nyglobal
+    delz= 6.0 / nzglobal
 
   END SUBROUTINE grid_setup
 
@@ -117,9 +119,13 @@ CONTAINS
     ALLOCATE(aax(nx,   ny+1, nz+1))
     ALLOCATE(aay(nx+1, ny,   nz+1))
     ALLOCATE(aaz(nx+1, ny+1, nz  ))
+
     ALLOCATE(bbx(1:nx+1, 0:ny+1, 0:nz+1))
     ALLOCATE(bby(0:nx+1, 1:ny+1, 0:nz+1))
     ALLOCATE(bbz(0:nx+1, 0:ny+1, 1:nz+1))
+
+    ALLOCATE(bbx0(1:nx+1, 0:ny+1))
+    ALLOCATE(bby0(0:nx+1, 1:ny+1))
 
   END SUBROUTINE arrayaloc
 

@@ -21,7 +21,8 @@ MODULE var_global
   CHARACTER (LEN = *), PARAMETER :: evolution_field_file = 'run1/run1_00003p'
   CHARACTER (LEN = *), PARAMETER :: parameters_file      = 'run1/param1'       ! Used to get nx, ny, nz
   CHARACTER (LEN = *), PARAMETER :: setup_file           = 'run1/run1_setup'   ! Used to check for periodic/open boundaries
-  CHARACTER (LEN = *), PARAMETER :: output_dir           = 'run1'
+  CHARACTER (LEN = *), PARAMETER :: output_file          = 'run1/relax_'
+  CHARACTER (LEN = 50) :: filename
 
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: aax, aay, aaz
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: bbx, bby, bbz, bx, by, bz, bb
