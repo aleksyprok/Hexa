@@ -21,7 +21,6 @@ CONTAINS
       periods(2) = .FALSE.
     END IF
 
-    PRINT*, MPI_COMM_WORLD, mpidir, nproc, periods, .TRUE., comm, ierr
     CALL MPI_CART_CREATE(MPI_COMM_WORLD, mpidir, nproc, periods, .TRUE., comm, ierr)
 
     CALL MPI_COMM_RANK(comm, rank, ierr)
@@ -48,6 +47,10 @@ CONTAINS
       READ(42, *) length_cm
       READ(42, *) time_s
       CLOSE(42)
+      ! PRINT*, 'Warning! nx, ny, nz are being overwritten.'
+      ! nxglobal = 4
+      ! nyglobal = 8
+      ! nzglobal = 128
     END IF
     CALL MPI_BCAST(num_hex_cells, 1, MPI_INTEGER, rankstart, comm, ierr)
     CALL MPI_BCAST(nxglobal, 1, MPI_INTEGER, rankstart, comm, ierr)
@@ -62,7 +65,7 @@ CONTAINS
     nx = nxglobal / nproc(1) ! no of cells in x associated with each process
     ny = nyglobal / nproc(2) ! no of cells in y associated with each process
 
-    IF ( ((nx * nproc(1)) .NE. nxglobal) .or.  &
+    IF ( ((nx * nproc(1)) .NE. nxglobal) .OR.  &
          ((ny * nproc(2)) .NE. nyglobal) ) THEN
         IF ( (nx * nproc(1)) .NE. nxglobal) THEN
            PRINT*,'Unable to subdivide equally in x. Fix grid'
@@ -124,6 +127,10 @@ CONTAINS
     ALLOCATE(bby(0:nx+1, 1:ny+1, 0:nz+1))
     ALLOCATE(bbz(0:nx+1, 0:ny+1, 1:nz+1))
 
+    ALLOCATE(ccx(0:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(ccy(1:nx+1, 0:ny+1, 1:nz+1))
+    ALLOCATE(ccz(1:nx+1, 1:ny+1, 0:nz+1))
+
     ALLOCATE(bbx0(1:nx+1, 0:ny+1))
     ALLOCATE(bby0(0:nx+1, 1:ny+1))
 
@@ -133,6 +140,7 @@ CONTAINS
 
     DEALLOCATE(aax, aay, aaz)
     DEALLOCATE(bbx, bby, bbz)
+    DEALLOCATE(ccx, ccy, ccz)
 
   END SUBROUTINE arraydealoc
 

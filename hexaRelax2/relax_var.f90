@@ -17,7 +17,7 @@ MODULE var_global
   INTEGER :: periodic, open
 
   ! File and directory names
-  CHARACTER (LEN = *), PARAMETER :: potential_field_file = 'run1/poten_00003p'
+  CHARACTER (LEN = *), PARAMETER :: potential_field_file = 'run1/run1_00003p'!'run1/poten_00003p'
   CHARACTER (LEN = *), PARAMETER :: evolution_field_file = 'run1/run1_00003p'
   CHARACTER (LEN = *), PARAMETER :: parameters_file      = 'run1/param1'       ! Used to get nx, ny, nz
   CHARACTER (LEN = *), PARAMETER :: setup_file           = 'run1/run1_setup'   ! Used to check for periodic/open boundaries

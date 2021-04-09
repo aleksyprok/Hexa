@@ -8,14 +8,16 @@ MODULE cal
 
 CONTAINS
 
+
   SUBROUTINE calc_boundary_field
 
     REAL, DIMENSION(1:nx+1, 0:ny+1) :: bbx1
     REAL, DIMENSION(0:nx+1, 1:ny+1) :: bby1
+    REAL, DIMENSION(0:nx+1, 0:ny+1) :: bbz1
 
     CALL readdata(evolution_field_file)
 
-    ! Calculate bbx0
+    ! Calculate bbx1
 
     bbx1(:, 1:ny) =  &
         (aaz(:, 2:ny+1, 1) - aaz(:, 1:ny, 1)) / dely  &
@@ -32,9 +34,7 @@ CONTAINS
     IF (down .EQ. MPI_PROC_NULL) bbx1(:, 0   ) = bbx1(:, 1 )
     IF (up   .EQ. MPI_PROC_NULL) bbx1(:, ny+1) = bbx1(:, ny)
 
-    bbx0 = bbx1
-
-    ! Calculate bby0
+    ! Calculate bby1
 
     bby1(1:nx, :) =  &
         (aax(:,      :, 2) - aax(:,    :, 1)) / delz  &
@@ -50,7 +50,37 @@ CONTAINS
     IF (left  .EQ. MPI_PROC_NULL) bby1(0,    :) = bby1(1,  :)
     IF (right .EQ. MPI_PROC_NULL) bby1(nx+1, :) = bby1(nx, :)
 
-    bby0 = bby1
+
+    ! Calculate bbz1
+
+    bbz1(1:nx, 1:ny) =  &
+        (aay(2:nx+1,      :, 1) - aay(1:nx,    :, 1)) / delx  &
+      - (aax(     :, 2:ny+1, 1) - aax(   :, 1:ny, 1)) / dely
+    ! Horizontal transfer
+    CALL MPI_SENDRECV(bbz1(nx, :), ny + 2, MPI_REAL, right, tag, &
+                      bbz1(0,  :), ny + 2, MPI_REAL, left,  tag, &
+                      comm, stat, ierr)
+    CALL MPI_SENDRECV(bbz1(1   , :), ny + 2, MPI_REAL, left,  tag, &
+                      bbz1(nx+1, :), ny + 2, MPI_REAL, right, tag, &
+                      comm, stat, ierr)
+    ! Vertical transfer
+    CALL MPI_SENDRECV(bbz1(:, ny), nx + 2, MPI_REAL, up,   tag, &
+                      bbz1(:, 0 ), nx + 2, MPI_REAL, down, tag, &
+                      comm, stat, ierr)
+    CALL MPI_SENDRECV(bbz1(:, 1   ), nx + 2, MPI_REAL, down, tag, &
+                      bbz1(:, ny+1), nx + 2, MPI_REAL, up,   tag, &
+                      comm, stat, ierr)
+    ! Apply boundary conditions
+    IF (left  .EQ. MPI_PROC_NULL) bbz1(0,    :) = bbz1(1,  :)
+    IF (right .EQ. MPI_PROC_NULL) bbz1(nx+1, :) = bbz1(nx, :)
+    IF (down  .EQ. MPI_PROC_NULL) bbz1(:, 0   ) = bbz1(:, 1 )
+    IF (up    .EQ. MPI_PROC_NULL) bbz1(:, ny+1) = bbz1(:, ny)
+
+    ! Calculate bbx0, bby0
+    bbx0 = bbx1 - delz / delx * (bbz1(1:nx+1, :) - bbz1(0:nx, :))
+    bby0 = bby1 - delz / dely * (bbz1(:, 1:ny+1) - bbz1(:, 0:ny))
+    ! bbx0 = bbx1
+    ! bby0 = bby1
 
   END SUBROUTINE calc_boundary_field
 
