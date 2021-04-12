@@ -12,20 +12,17 @@ CONTAINS
 
     REAL :: frc, bbmax, t, local_max
     REAL :: localmin, globalmin
+    REAL :: b2local, b2global
     INTEGER :: i, j, k, n
 
     ! Define frictional coefficient in dimensionless units
     frc = frc_coef * 1.E10 / (length_cm * length_cm) * time_s
 
     t = 0. ! Set local time variable to zero
-    n = 0
 
-    DO WHILE (t .LT. 1.) ! Loop until time has reached 1
+    DO n = 1, 10000
 
-      n = n + 1
       t = t + dt
-
-      IF (rank .EQ. rankstart) PRINT*, n
 
       ccx = (bbz(:, 1:ny+1, :) - bbz(:, 0:ny, :)) / dely  &
           - (bby(:, :, 1:nz+1) - bby(:, :, 0:nz)) / delz
@@ -76,6 +73,10 @@ CONTAINS
       eey = 0.5 * (ey(:, 1:ny, :) + ey(:, 2:ny+1, :))
       eez = 0.5 * (ez(:, :, 1:nz) + ez(:, :, 2:nz+1))
 
+      ! Overwrite electric Field
+      eex(:, :, 1) = 0.
+      eey(:, :, 1) = 0.
+
       bbx(:, 1:ny, 1:nz) = bbx(:, 1:ny, 1:nz) + dt * ( &
                            (eey(:, :, 2:nz+1) - eey(:, :, 1:nz)) / delz - &
                            (eez(:, 2:ny+1, :) - eez(:, 1:ny, :)) / dely )
@@ -90,32 +91,97 @@ CONTAINS
       CALL vertical_transfer
       CALL boundary_conditions
 
-      CALL writedata(n)
-
       !####################################################
       !                 Determine timestep
       !####################################################
 
       ! Determine minimum cell crossing time for advection terms
 
-      localmin=minval( (/ delx / maxval(vx),&
-                          dely / maxval(vy),&
-                          delz / maxval(vz) /) )
+      localmin = MINVAL( (/ delx / MAXVAL(vx),&
+                            dely / MAXVAL(vy),&
+                            delz / MAXVAL(vz) /) )
       CALL MPI_ALLREDUCE(localMin, globalMin, 1, MPI_Real, MPI_MIN, MPI_COMM_WORLD, ierr)
 
       ! Set timestep
       dt = 0.2 * globalmin
       IF (dt .LT. basedt * 1.e-3) dt = 1.e-3 * basedt ! If timestep is too small, set to 0.001*basedt
 
+      !####################################################
+      !                  Output values
+      !####################################################
+
+      ! Calculate magnetic energy
+      b2local = SUM(bb(1:nx, 1:ny, 1:nz+1)) / 8. / pi * delx ** 3
+      CALL MPI_ALLREDUCE(b2local, b2global, 1, MPI_Real, MPI_SUM, MPI_COMM_WORLD, ierr)
+
+      IF (rank .EQ. rankstart) THEN
+        IF (MOD(n, 100) .EQ. 0) PRINT*, n
+        WRITE(50, *) t * time_s, &
+                     b2global * length_cm ** 3. ! Magnetic energy (erg)
+      ENDIF
+      ! CALL writedata(n)
+      ! CALL write_electric(n-1)
+
     END DO
 
   END SUBROUTINE relax_routine
 
-  SUBROUTINE calc_boundary_field
+  SUBROUTINE boundary_conditions
 
-    REAL, DIMENSION(1:nx+1, 0:ny+1) :: bbx1
-    REAL, DIMENSION(0:nx+1, 1:ny+1) :: bby1
-    REAL, DIMENSION(0:nx+1, 0:ny+1) :: bbz1
+    ! Bounary conditions
+
+    IF (left .EQ. MPI_PROC_NULL) THEN
+      bby(0, :, :) = bby(1, :, :)
+      bbz(0, :, :) = bbz(1, :, :)
+    END IF
+
+    IF (right .EQ. MPI_PROC_NULL) THEN
+      bby(nx+1, :, :) = bby(nx, :, :)
+      bbz(nx+1, :, :) = bbz(nx, :, :)
+    END IF
+
+    IF (down .EQ. MPI_PROC_NULL) THEN
+      bbx(:, 0, :) = bbx(:, 1, :)
+      bbz(:, 0, :) = bbz(:, 1, :)
+    END IF
+
+    IF (up .EQ. MPI_PROC_NULL) THEN
+      bbx(:, ny+1, :) = bbx(:, ny, :)
+      bbz(:, ny+1, :) = bbz(:, ny, :)
+    END IF
+
+    bbx(:, :, 0) = 2. * bbx_fix - bbx(:, :, 1)
+    bby(:, :, 0) = 2. * bby_fix - bby(:, :, 1)
+
+    bbx(:, :, nz+1) = bbx(:, :, nz)
+    bby(:, :, nz+1) = bby(:, :, nz)
+
+  END SUBROUTINE boundary_conditions
+
+  SUBROUTINE calc_initial_field
+
+    CALL readdata(potential_field_file)
+
+    bbx(:, 1:ny, 1:nz) =  &
+        (aaz(:, 2:ny+1, :     ) - aaz(:, 1:ny, :   )) / dely  &
+      - (aay(:, :     , 2:nz+1) - aay(:, :   , 1:nz)) / delz
+
+    bby(1:nx, :, 1:nz) =  &
+        (aax(:     , :, 2:nz+1) - aax(:   , :, 1:nz)) / delz  &
+      - (aaz(2:nx+1, :, :     ) - aaz(1:nx, :, :   )) / delx
+
+    bbz(1:nx, 1:ny, :) =  &
+        (aay(2:nx+1, :     , :) - aay(1:nx, :   , :)) / delx  &
+      - (aax(:     , 2:ny+1, :) - aax(:   , 1:ny, :)) / dely
+
+    CALL horizontal_transfer
+    CALL vertical_transfer
+
+    CALL boundary_conditions
+
+  END SUBROUTINE calc_initial_field
+
+  SUBROUTINE calc_boundary_field
 
     CALL readdata(evolution_field_file)
 
@@ -152,7 +218,6 @@ CONTAINS
     IF (left  .EQ. MPI_PROC_NULL) bby1(0,    :) = bby1(1,  :)
     IF (right .EQ. MPI_PROC_NULL) bby1(nx+1, :) = bby1(nx, :)
 
-
     ! Calculate bbz1
 
     bbz1(1:nx, 1:ny) =  &
@@ -182,59 +247,10 @@ CONTAINS
     bbx0 = bbx1 - delz / delx * (bbz1(1:nx+1, :) - bbz1(0:nx, :))
     bby0 = bby1 - delz / dely * (bbz1(:, 1:ny+1) - bbz1(:, 0:ny))
 
+    bbx_fix = 0.5 * (bbx0 + bbx1)
+    bby_fix = 0.5 * (bby0 + bby1)
+
   END SUBROUTINE calc_boundary_field
-
-  SUBROUTINE calc_initial_field
-
-    CALL readdata(potential_field_file)
-
-    bbx(:, 1:ny, 1:nz) =  &
-        (aaz(:, 2:ny+1, :     ) - aaz(:, 1:ny, :   )) / dely  &
-      - (aay(:, :     , 2:nz+1) - aay(:, :   , 1:nz)) / delz
-
-    bby(1:nx, :, 1:nz) =  &
-        (aax(:     , :, 2:nz+1) - aax(:   , :, 1:nz)) / delz  &
-      - (aaz(2:nx+1, :, :     ) - aaz(1:nx, :, :   )) / delx
-
-    bbz(1:nx, 1:ny, :) =  &
-        (aay(2:nx+1, :     , :) - aay(1:nx, :   , :)) / delx  &
-      - (aax(:     , 2:ny+1, :) - aax(:   , 1:ny, :)) / dely
-
-    CALL horizontal_transfer
-    CALL vertical_transfer
-    CALL boundary_conditions
-
-  END SUBROUTINE calc_initial_field
-
-  SUBROUTINE boundary_conditions
-
-    IF (left .EQ. MPI_PROC_NULL) THEN
-      bby(0, :, :) = bby(1, :, :)
-      bbz(0, :, :) = bbz(1, :, :)
-    END IF
-
-    IF (right .EQ. MPI_PROC_NULL) THEN
-      bby(nx+1, :, :) = bby(nx, :, :)
-      bbz(nx+1, :, :) = bbz(nx, :, :)
-    END IF
-
-    IF (down .EQ. MPI_PROC_NULL) THEN
-      bbx(:, 0, :) = bbx(:, 1, :)
-      bbz(:, 0, :) = bbz(:, 1, :)
-    END IF
-
-    IF (up .EQ. MPI_PROC_NULL) THEN
-      bbx(:, ny+1, :) = bbx(:, ny, :)
-      bbz(:, ny+1, :) = bbz(:, ny, :)
-    END IF
-
-    bbx(:,:,0) = bbx0
-    bby(:,:,0) = bby0
-
-    bbx(:,:,nz+1) = bbx(:,:,nz)
-    bby(:,:,nz+1) = bby(:,:,nz)
-
-  END SUBROUTINE boundary_conditions
 
   SUBROUTINE horizontal_transfer
 

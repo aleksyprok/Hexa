@@ -22,6 +22,7 @@ MODULE var_global
   CHARACTER (LEN = *), PARAMETER :: parameters_file      = 'run1/param1'       ! Used to get nx, ny, nz
   CHARACTER (LEN = *), PARAMETER :: setup_file           = 'run1/run1_setup'   ! Used to check for periodic/open boundaries
   CHARACTER (LEN = *), PARAMETER :: output_file          = 'run1/relax_'
+  CHARACTER (LEN = *), PARAMETER :: electric_file          = 'run1/electric_'
   CHARACTER (LEN = 50) :: filename
 
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: aax, aay, aaz
@@ -32,6 +33,8 @@ MODULE var_global
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: bb, bbm
 
   REAL, DIMENSION(:, :), ALLOCATABLE :: bbx0, bby0
+  REAL, DIMENSION(:, :), ALLOCATABLE :: bbx1, bby1, bbz1
+  REAL, DIMENSION(:, :), ALLOCATABLE :: bbx_fix, bby_fix
 
   ! Variables associated with MPI
   INTEGER :: mpisize, ierr, rank, comm

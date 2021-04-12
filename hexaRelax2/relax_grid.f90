@@ -156,6 +156,11 @@ CONTAINS
 
     ALLOCATE(bbx0(1:nx+1, 0:ny+1))
     ALLOCATE(bby0(0:nx+1, 1:ny+1))
+    ALLOCATE(bbx1(1:nx+1, 0:ny+1))
+    ALLOCATE(bby1(0:nx+1, 1:ny+1))
+    ALLOCATE(bbz1(0:nx+1, 0:ny+1))
+    ALLOCATE(bbx_fix(1:nx+1, 0:ny+1))
+    ALLOCATE(bby_fix(0:nx+1, 1:ny+1))
 
   END SUBROUTINE arrayaloc
 
@@ -164,8 +169,16 @@ CONTAINS
     DEALLOCATE(aax, aay, aaz)
     DEALLOCATE(bbx, bby, bbz)
     DEALLOCATE(ccx, ccy, ccz)
+    DEALLOCATE(bx, by, bz)
+    DEALLOCATE(bb, bbm)
+    DEALLOCATE(cx, cy, cz)
+    DEALLOCATE(vx, vy, vz)
+    DEALLOCATE(ex, ey, ez)
+    DEALLOCATE(eex, eey, eez)
 
     DEALLOCATE(bbx0, bby0)
+    DEALLOCATE(bbx1, bby1, bbz1)
+    DEALLOCATE(bbx_fix, bby_fix)
 
   END SUBROUTINE arraydealoc
 

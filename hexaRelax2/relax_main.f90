@@ -25,10 +25,17 @@ PROGRAM relax
   CALL calc_initial_field
 
   CALL writedata(0)
+  IF (rank .EQ. rankstart) THEN
+    OPEN (UNIT = 50, FILE = 'run1/diagnostic', STATUS = 'unknown')
+  ENDIF
 
   CALL relax_routine
 
   CALL MPI_BARRIER(comm, ierr)
+
+  IF (rank .EQ. rankstart) THEN
+    CLOSE(50)
+  ENDIF
 
   CALL MPI_FINALIZE(ierr)
 

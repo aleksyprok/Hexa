@@ -89,7 +89,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: n
     REAL, DIMENSION(:,:,:), ALLOCATABLE :: bbx_global, bby_global, bbz_global
     INTEGER, DIMENSION(mpidir) :: dumcord
-    INTEGER :: i, j, k
+    INTEGER :: i, j
 
     IF (rank .EQ. rankstart) THEN
 
@@ -145,12 +145,12 @@ CONTAINS
            FILE = FILENAME, &
            FORM = 'UNFORMATTED', &
            STATUS = 'UNKNOWN')
-      WRITE (42) (((bbx_global(i,j,k), i = 1, nxglobal + 1), j = 0, nyglobal + 1), k = 0, nzglobal + 1)
-      WRITE (42) (((bby_global(i,j,k), i = 0, nxglobal + 1), j = 1, nyglobal + 1), k = 0, nzglobal + 1)
-      WRITE (42) (((bbz_global(i,j,k), i = 0, nxglobal + 1), j = 0, nyglobal + 1), k = 1, nzglobal + 1)
-      ! WRITE (42) bbx_global
-      ! WRITE (42) bby_global
-      ! WRITE (42) bbz_global
+      ! WRITE (42) (((bbx_global(i,j,k), i = 1, nxglobal + 1), j = 0, nyglobal + 1), k = 0, nzglobal + 1)
+      ! WRITE (42) (((bby_global(i,j,k), i = 0, nxglobal + 1), j = 1, nyglobal + 1), k = 0, nzglobal + 1)
+      ! WRITE (42) (((bbz_global(i,j,k), i = 0, nxglobal + 1), j = 0, nyglobal + 1), k = 1, nzglobal + 1)
+      WRITE (42) bbx_global
+      WRITE (42) bby_global
+      WRITE (42) bbz_global
       CLOSE (42)
 
       DEALLOCATE(bbx_global, bby_global, bbz_global)
@@ -158,5 +158,77 @@ CONTAINS
     ENDIF
 
   END SUBROUTINE writedata
+
+  SUBROUTINE write_electric(n)
+
+    INTEGER, INTENT(IN) :: n
+    REAL, DIMENSION(:,:,:), ALLOCATABLE :: eex_global, eey_global, eez_global
+    INTEGER, DIMENSION(mpidir) :: dumcord
+    INTEGER :: i, j
+
+    IF (rank .EQ. rankstart) THEN
+
+       ALLOCATE(eex_global(1:nxglobal  , 1:nyglobal+1, 1:nzglobal+1))
+       ALLOCATE(eey_global(1:nxglobal+1, 1:nyglobal  , 1:nzglobal+1))
+       ALLOCATE(eez_global(1:nxglobal+1, 1:nyglobal+1, 1:nzglobal  ))
+
+       eex_global(1:nx  , 1:ny+1, 1:nz+1) = eex
+       eey_global(1:nx+1, 1:ny  , 1:nz+1) = eey
+       eez_global(1:nx+1, 1:ny+1, 1:nz  ) = eez
+
+    END IF
+
+    IF(rank .NE. rankstart) THEN
+
+      CALL MPI_SEND(eex, nx * (ny + 1) * (nz + 1), MPI_REAL, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(eey, (nx + 1) * ny * (nz + 1), MPI_REAL, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(eez, (nx + 1) * (ny + 1) * nz, MPI_REAL, rankstart, tag, comm, ierr)
+
+    ELSE
+
+      DO j = 0, nproc(2) - 1
+        DO i = 0, nproc(1) - 1
+          IF ((i .EQ. 0) .AND. (j .EQ. 0)) CYCLE ! Already calculated ee for processor at (0, 0)
+          dumcord(1) = i
+          dumcord(2) = j
+          CALL MPI_CART_RANK(comm, dumcord, nextrank, ierr)
+          CALL MPI_RECV(eex_global((i * nx) + 1 : (i + 1) * nx, &
+                                   (j * ny) + 1 : (j + 1) * ny + 1, &
+                                   :), &
+                        nx * (ny + 1) * (nz + 1), &
+                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+          CALL MPI_RECV(eey_global((i * nx) + 1 : (i + 1) * nx + 1, &
+                                   (j * ny) + 1 : (j + 1) * ny, &
+                                   :), &
+                        (nx + 1) * ny * (nz + 1), &
+                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+          CALL MPI_RECV(eez_global((i * nx) + 1 : (i + 1) * nx + 1, &
+                                   (j * ny) + 1 : (j + 1) * ny + 1, &
+                                   :), &
+                        (nx + 1) * (ny + 1) * nz, &
+                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+        END DO
+      END DO
+
+    END IF
+
+    IF (rank .EQ. rankstart) THEN
+
+      WRITE (filename, FMT = '(a, i5.5)')  electric_file, n
+
+      OPEN(UNIT = 42, &
+           FILE = FILENAME, &
+           FORM = 'UNFORMATTED', &
+           STATUS = 'UNKNOWN')
+      WRITE (42) eex_global
+      WRITE (42) eey_global
+      WRITE (42) eez_global
+      CLOSE (42)
+
+      DEALLOCATE(eex_global, eey_global, eez_global)
+
+    ENDIF
+
+  END SUBROUTINE write_electric
 
 END MODULE io
