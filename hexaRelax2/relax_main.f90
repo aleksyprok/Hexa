@@ -7,6 +7,8 @@ PROGRAM relax
 
   IMPLICIT NONE
 
+  timestep_s = 60. ! Timestep in seconds.
+
   CALL MPI_INIT(ierr) ! Initiate MPI
 
   CALL MPI_COMM_SIZE(comm, mpisize, ierr) ! Get # of processes
@@ -14,16 +16,17 @@ PROGRAM relax
   CALL setup_param ! Check if periodic or open boundary conditions are used
   CALL grid_setup  ! Sets up computational grid and MPI (and reads in param1)
 
+  basedt = timestep_s / time_s
+  dt = MINVAL( (/ basedt, 0.1 /) ) ! Set dt to be basedt initially or 0.1 of the magnetogram cadence (whichever is smaller)
+
   CALL arrayaloc ! Allocates arrays
 
   CALL calc_boundary_field
   CALL calc_initial_field
 
-  ! bbx = 0.0
-  ! bby = 0.0
-  ! bbz = 0.0
-
   CALL writedata(0)
+
+  CALL relax_routine
 
   CALL MPI_BARRIER(comm, ierr)
 

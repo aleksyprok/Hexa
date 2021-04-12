@@ -131,6 +131,29 @@ CONTAINS
     ALLOCATE(ccy(1:nx+1, 0:ny+1, 1:nz+1))
     ALLOCATE(ccz(1:nx+1, 1:ny+1, 0:nz+1))
 
+    ALLOCATE(bx(1:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(by(1:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(bz(1:nx+1, 1:ny+1, 1:nz+1))
+
+    ALLOCATE( bb(1:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(bbm(1:nx+1, 1:ny+1, 1:nz+1))
+
+    ALLOCATE(cx(1:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(cy(1:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(cz(1:nx+1, 1:ny+1, 1:nz+1))
+
+    ALLOCATE(vx(1:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(vy(1:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(vz(1:nx+1, 1:ny+1, 1:nz+1))
+
+    ALLOCATE(ex(1:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(ey(1:nx+1, 1:ny+1, 1:nz+1))
+    ALLOCATE(ez(1:nx+1, 1:ny+1, 1:nz+1))
+
+    ALLOCATE(eex(1:nx  , 1:ny+1, 1:nz+1))
+    ALLOCATE(eey(1:nx+1, 1:ny  , 1:nz+1))
+    ALLOCATE(eez(1:nx+1, 1:ny+1, 1:nz  ))
+
     ALLOCATE(bbx0(1:nx+1, 0:ny+1))
     ALLOCATE(bby0(0:nx+1, 1:ny+1))
 
@@ -141,6 +164,8 @@ CONTAINS
     DEALLOCATE(aax, aay, aaz)
     DEALLOCATE(bbx, bby, bbz)
     DEALLOCATE(ccx, ccy, ccz)
+
+    DEALLOCATE(bbx0, bby0)
 
   END SUBROUTINE arraydealoc
 

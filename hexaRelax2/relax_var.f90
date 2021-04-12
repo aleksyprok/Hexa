@@ -17,7 +17,7 @@ MODULE var_global
   INTEGER :: periodic, open
 
   ! File and directory names
-  CHARACTER (LEN = *), PARAMETER :: potential_field_file = 'run1/run1_00003p'!'run1/poten_00003p'
+  CHARACTER (LEN = *), PARAMETER :: potential_field_file = 'run1/poten_00003p'
   CHARACTER (LEN = *), PARAMETER :: evolution_field_file = 'run1/run1_00003p'
   CHARACTER (LEN = *), PARAMETER :: parameters_file      = 'run1/param1'       ! Used to get nx, ny, nz
   CHARACTER (LEN = *), PARAMETER :: setup_file           = 'run1/run1_setup'   ! Used to check for periodic/open boundaries
@@ -25,10 +25,11 @@ MODULE var_global
   CHARACTER (LEN = 50) :: filename
 
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: aax, aay, aaz
-  REAL, DIMENSION(:, :, :), ALLOCATABLE :: bbx, bby, bbz, bx, by, bz, bb
+  REAL, DIMENSION(:, :, :), ALLOCATABLE :: bbx, bby, bbz, bx, by, bz
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: ccx, ccy, ccz, cx, cy, cz
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: eex, eey, eez, ex, ey, ez
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: vx, vy, vz
+  REAL, DIMENSION(:, :, :), ALLOCATABLE :: bb, bbm
 
   REAL, DIMENSION(:, :), ALLOCATABLE :: bbx0, bby0
 
@@ -41,7 +42,9 @@ MODULE var_global
   LOGICAL, DIMENSION(mpidir) :: periods
 
   ! Variables associated with length and time
-  REAL :: length_cm !length of one Hexa length unit in cm
-  REAL :: time_s !time of one hexa time unit in seconds
+  REAL :: length_cm ! Length of one Hexa length unit in cm
+  REAL :: time_s ! Time of one hexa time unit in seconds
+  REAL :: dt, basedt ! Timestep and default timestep (hexa units)
+  REAL :: timestep_s ! Default timestep in seconds
 
 END MODULE var_global
