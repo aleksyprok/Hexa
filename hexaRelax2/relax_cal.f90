@@ -13,6 +13,11 @@ CONTAINS
     REAL :: frc, bbmax, t, local_max
     REAL :: localmin, globalmin
     REAL :: b2local, b2global
+    REAL :: qlocal, qglobal
+    REAL, DIMENSION(nx+1, ny+1, nz+1) :: diss
+    REAL :: min_divb_local, min_divb_global, max_divb_local, max_divb_global
+    REAL :: mean_divb_local, mean_divb_global
+    REAL, DIMENSION(nx, ny, nz) :: divb
     INTEGER :: i, j, k, n
 
     ! Define frictional coefficient in dimensionless units
@@ -20,7 +25,7 @@ CONTAINS
 
     t = 0. ! Set local time variable to zero
 
-    DO n = 1, 10000
+    DO n = 1, 99999
 
       t = t + dt
 
@@ -74,8 +79,8 @@ CONTAINS
       eez = 0.5 * (ez(:, :, 1:nz) + ez(:, :, 2:nz+1))
 
       ! Overwrite electric Field
-      eex(:, :, 1) = 0.
-      eey(:, :, 1) = 0.
+      ! eex(:, :, 1) = 0.
+      ! eey(:, :, 1) = 0.
 
       bbx(:, 1:ny, 1:nz) = bbx(:, 1:ny, 1:nz) + dt * ( &
                            (eey(:, :, 2:nz+1) - eey(:, :, 1:nz)) / delz - &
@@ -97,14 +102,14 @@ CONTAINS
 
       ! Determine minimum cell crossing time for advection terms
 
-      localmin = MINVAL( (/ delx / MAXVAL(vx),&
-                            dely / MAXVAL(vy),&
-                            delz / MAXVAL(vz) /) )
-      CALL MPI_ALLREDUCE(localMin, globalMin, 1, MPI_Real, MPI_MIN, MPI_COMM_WORLD, ierr)
+      localmin = MINVAL( (/ delx / MAXVAL(ABS(vx)),&
+                            dely / MAXVAL(ABS(vy)),&
+                            delz / MAXVAL(ABS(vz)) /) )
+      CALL MPI_ALLREDUCE(localmin, globalmin, 1, MPI_Real, MPI_MIN, MPI_COMM_WORLD, ierr)
 
       ! Set timestep
-      dt = 0.2 * globalmin
-      IF (dt .LT. basedt * 1.e-3) dt = 1.e-3 * basedt ! If timestep is too small, set to 0.001*basedt
+      dt = 0.002 * globalmin
+      ! IF (dt .LT. basedt * 1.e-3) dt = 1.e-3 * basedt ! If timestep is too small, set to 0.001*basedt
 
       !####################################################
       !                  Output values
@@ -114,13 +119,38 @@ CONTAINS
       b2local = SUM(bb(1:nx, 1:ny, 1:nz+1)) / 8. / pi * delx ** 3
       CALL MPI_ALLREDUCE(b2local, b2global, 1, MPI_Real, MPI_SUM, MPI_COMM_WORLD, ierr)
 
+      ! Dissipation Q = B ^ 2 / (4 * pi) * nu * v ^ 2
+      diss = vx * vx + vy * vy + vz * vz
+      diss = diss / frc / 4. / pi
+      diss = diss * bb
+      qlocal = SUM(diss(1:nx,1:ny,1:nz+1)) * delx ** 3
+      CALL MPI_ALLREDUCE(qlocal, qglobal, 1, MPI_Real, MPI_SUM, MPI_COMM_WORLD, ierr)
+
+      ! div B
+      divb = (bbx(2:nx+1, 1:ny, 1:nz) - bbx(1:nx, 1:ny, 1:nz)) / delx &
+           + (bby(1:nx, 2:ny+1, 1:nz) - bby(1:nx, 1:ny, 1:nz)) / dely &
+           + (bbz(1:nx, 1:ny, 2:nz+1) - bbz(1:nx, 1:ny, 1:nz)) / delz
+      divb = ABS(divb)
+      min_divb_local = MINVAL(divb)
+      max_divb_local = MAXVAL(divb)
+      mean_divb_local = SUM(divb) / (nxglobal * nyglobal * nzglobal)
+      CALL MPI_ALLREDUCE(min_divb_local, min_divb_global, 1, MPI_Real, MPI_MIN, MPI_COMM_WORLD, ierr)
+      CALL MPI_ALLREDUCE(max_divb_local, max_divb_global, 1, MPI_Real, MPI_MAX, MPI_COMM_WORLD, ierr)
+      CALL MPI_ALLREDUCE(mean_divb_local, mean_divb_global, 1, MPI_Real, MPI_SUM, MPI_COMM_WORLD, ierr)
+
       IF (rank .EQ. rankstart) THEN
         IF (MOD(n, 100) .EQ. 0) PRINT*, n
         WRITE(50, *) t * time_s, &
-                     b2global * length_cm ** 3. ! Magnetic energy (erg)
+                     b2global * length_cm ** 3., &        ! Magnetic energy (erg)
+              	     qglobal / time_s * length_cm ** 3, & ! Frictional dissipation (erg/s)
+                     min_divb_global, &
+                     max_divb_global, &
+                     mean_divb_global
       ENDIF
-      ! CALL writedata(n)
-      ! CALL write_electric(n-1)
+      IF (MOD(n+1, 1000) .EQ. 0) THEN
+        CALL writedata(n)
+        CALL write_electric(n-1)
+      END IF
 
     END DO
 
