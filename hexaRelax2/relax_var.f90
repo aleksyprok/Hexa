@@ -5,7 +5,7 @@ MODULE var_global
   INCLUDE "mpif.h"
 
   REAL, PARAMETER :: pi = 3.141592654
-  REAL, PARAMETER :: frc_coef = 3000. ! Frictional coefficient (km^2/s)
+  REAL, PARAMETER :: frc_coef = 3000 ! Frictional coefficient (km^2/s)
 
   ! Grid parameters:
   REAL :: delx, dely, delz
@@ -17,12 +17,12 @@ MODULE var_global
   INTEGER :: periodic, open
 
   ! File and directory names
-  CHARACTER (LEN = *), PARAMETER :: potential_field_file = 'run1/poten_00003p'
-  CHARACTER (LEN = *), PARAMETER :: evolution_field_file = 'run1/run1_00003p'
-  CHARACTER (LEN = *), PARAMETER :: parameters_file      = 'run1/param1'       ! Used to get nx, ny, nz
-  CHARACTER (LEN = *), PARAMETER :: setup_file           = 'run1/run1_setup'   ! Used to check for periodic/open boundaries
+  CHARACTER (LEN = *), PARAMETER :: potential_field_file = 'setup_files/poten_00003p'
+  CHARACTER (LEN = *), PARAMETER :: evolution_field_file = 'setup_files/poten_00003p'
+  CHARACTER (LEN = *), PARAMETER :: parameters_file      = 'setup_files/param1'       ! Used to get nx, ny, nz
+  CHARACTER (LEN = *), PARAMETER :: setup_file           = 'setup_files/run1_setup'   ! Used to check for periodic/open boundaries
   CHARACTER (LEN = *), PARAMETER :: output_file          = 'run1/relax_'
-  CHARACTER (LEN = *), PARAMETER :: electric_file          = 'run1/electric_'
+  CHARACTER (LEN = *), PARAMETER :: electric_file        = 'run1/electric_'
   CHARACTER (LEN = 50) :: filename
 
   REAL, DIMENSION(:, :, :), ALLOCATABLE :: aax, aay, aaz

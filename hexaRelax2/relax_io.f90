@@ -103,7 +103,7 @@ CONTAINS
 
     END IF
 
-    IF(rank .NE. rankstart) THEN
+    IF (rank .NE. rankstart) THEN
 
       CALL MPI_SEND(bbx, (nx + 1) * (ny + 2) * (nz + 2), MPI_REAL, rankstart, tag, comm, ierr)
       CALL MPI_SEND(bby, (nx + 2) * (ny + 1) * (nz + 2), MPI_REAL, rankstart, tag, comm, ierr)

@@ -25,7 +25,7 @@ fig.set_size_inches(fig_size)
 ix_list = [0, 64, -1]
 iy_list = [0, 64, -1]
 
-for n in range(149):
+for n in range(101):
 
     print(n)
 
