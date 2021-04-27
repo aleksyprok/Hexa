@@ -57,25 +57,25 @@ CONTAINS
                                    (j * ny) + 1 : (j + 1) * ny + 1, &
                                    1 : nz + 1), &
                         nx * (ny + 1) * (nz + 1), &
-                        MPI_REAL, nextrank, tag, comm, ierr)
+                        MPI_REAL4, nextrank, tag, comm, ierr)
           CALL MPI_SEND(aay_global((i * nx) + 1 : (i + 1) * nx + 1, &
                                    (j * ny) + 1 : (j + 1) * ny, &
                                    1 : nz + 1), &
                         (nx + 1) * ny * (nz + 1), &
-                        MPI_REAL, nextrank, tag, comm, ierr)
+                        MPI_REAL4, nextrank, tag, comm, ierr)
           CALL MPI_SEND(aaz_global((i * nx) + 1 : (i + 1) * nx + 1, &
                                    (j * ny) + 1 : (j + 1) * ny + 1, &
                                    1 : nz), &
                         (nx + 1) * (ny + 1) * nz, &
-                        MPI_REAL, nextrank, tag, comm, ierr)
+                        MPI_REAL4, nextrank, tag, comm, ierr)
         END DO
       END DO
 
     ELSE
 
-      CALL MPI_RECV(aax, nx * (ny + 1) * (nz + 1), MPI_REAL, rankstart, tag, comm, stat, ierr)
-      CALL MPI_RECV(aay, (nx + 1) * ny * (nz + 1), MPI_REAL, rankstart, tag, comm, stat, ierr)
-      CALL MPI_RECV(aaz, (nx + 1) * (ny + 1) * nz, MPI_REAL, rankstart, tag, comm, stat, ierr)
+      CALL MPI_RECV(aax, nx * (ny + 1) * (nz + 1), MPI_REAL4, rankstart, tag, comm, stat, ierr)
+      CALL MPI_RECV(aay, (nx + 1) * ny * (nz + 1), MPI_REAL4, rankstart, tag, comm, stat, ierr)
+      CALL MPI_RECV(aaz, (nx + 1) * (ny + 1) * nz, MPI_REAL4, rankstart, tag, comm, stat, ierr)
 
     END IF
 
@@ -106,9 +106,9 @@ CONTAINS
 
     IF (rank .NE. rankstart) THEN
 
-      CALL MPI_SEND(bbx, (nx + 1) * (ny + 2) * (nz + 2), MPI_REAL, rankstart, tag, comm, ierr)
-      CALL MPI_SEND(bby, (nx + 2) * (ny + 1) * (nz + 2), MPI_REAL, rankstart, tag, comm, ierr)
-      CALL MPI_SEND(bbz, (nx + 2) * (ny + 2) * (nz + 1), MPI_REAL, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(bbx, (nx + 1) * (ny + 2) * (nz + 2), MPI_REAL8, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(bby, (nx + 2) * (ny + 1) * (nz + 2), MPI_REAL8, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(bbz, (nx + 2) * (ny + 2) * (nz + 1), MPI_REAL8, rankstart, tag, comm, ierr)
 
     ELSE
 
@@ -122,17 +122,17 @@ CONTAINS
                                    (j * ny)     : (j + 1) * ny + 1, &
                                    :), &
                         (nx + 1) * (ny + 2) * (nz + 2), &
-                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+                        MPI_REAL8, nextrank, tag, comm, stat, ierr)
           CALL MPI_RECV(bby_global((i * nx)     : (i + 1) * nx + 1, &
                                    (j * ny) + 1 : (j + 1) * ny + 1, &
                                    :), &
                         (nx + 2) * (ny + 1) * (nz + 2), &
-                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+                        MPI_REAL8, nextrank, tag, comm, stat, ierr)
           CALL MPI_RECV(bbz_global((i * nx) : (i + 1) * nx + 1, &
                                    (j * ny) : (j + 1) * ny + 1, &
                                    :), &
                         (nx + 2) * (ny + 2) * (nz + 1), &
-                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+                        MPI_REAL8, nextrank, tag, comm, stat, ierr)
         END DO
       END DO
 
@@ -181,9 +181,9 @@ CONTAINS
 
     IF(rank .NE. rankstart) THEN
 
-      CALL MPI_SEND(eex, nx * (ny + 1) * (nz + 1), MPI_REAL, rankstart, tag, comm, ierr)
-      CALL MPI_SEND(eey, (nx + 1) * ny * (nz + 1), MPI_REAL, rankstart, tag, comm, ierr)
-      CALL MPI_SEND(eez, (nx + 1) * (ny + 1) * nz, MPI_REAL, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(eex, nx * (ny + 1) * (nz + 1), MPI_REAL8, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(eey, (nx + 1) * ny * (nz + 1), MPI_REAL8, rankstart, tag, comm, ierr)
+      CALL MPI_SEND(eez, (nx + 1) * (ny + 1) * nz, MPI_REAL8, rankstart, tag, comm, ierr)
 
     ELSE
 
@@ -197,17 +197,17 @@ CONTAINS
                                    (j * ny) + 1 : (j + 1) * ny + 1, &
                                    :), &
                         nx * (ny + 1) * (nz + 1), &
-                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+                        MPI_REAL8, nextrank, tag, comm, stat, ierr)
           CALL MPI_RECV(eey_global((i * nx) + 1 : (i + 1) * nx + 1, &
                                    (j * ny) + 1 : (j + 1) * ny, &
                                    :), &
                         (nx + 1) * ny * (nz + 1), &
-                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+                        MPI_REAL8, nextrank, tag, comm, stat, ierr)
           CALL MPI_RECV(eez_global((i * nx) + 1 : (i + 1) * nx + 1, &
                                    (j * ny) + 1 : (j + 1) * ny + 1, &
                                    :), &
                         (nx + 1) * (ny + 1) * nz, &
-                        MPI_REAL, nextrank, tag, comm, stat, ierr)
+                        MPI_REAL8, nextrank, tag, comm, stat, ierr)
         END DO
       END DO
 

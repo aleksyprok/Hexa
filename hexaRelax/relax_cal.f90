@@ -61,7 +61,7 @@ CONTAINS
              local_max = MAX(bb(i, j, k), local_max)
           ENDDO
         ENDDO
-        CALL MPI_ALLREDUCE(local_max, bbmax, 1, MPI_REAL, MPI_MAX, comm, ierr)
+        CALL MPI_ALLREDUCE(local_max, bbmax, 1, MPI_REAL8, MPI_MAX, comm, ierr)
         bbmax = 1.e-4 * bbmax
         DO j = 1, ny + 1
           DO i = 1, nx + 1
@@ -116,10 +116,7 @@ CONTAINS
                             dely / MAXVAL(ABS(vy)), &
                             delz / MAXVAL(ABS(vz)), &
                             delx * delx / etad /) )
-      CALL MPI_ALLREDUCE(localmin, globalmin, 1, MPI_Real8, MPI_MIN, MPI_COMM_WORLD, ierr)
-
-      PRINT*, MPI_REAL, MPI_DOUBLE
-      PRINT*, MPI_REAL8, MPI_DOUBLE
+      CALL MPI_ALLREDUCE(localmin, globalmin, 1, MPI_REAL8, MPI_MIN, MPI_COMM_WORLD, ierr)
 
       ! Set timestep
       dt = 0.2 * globalmin
@@ -131,14 +128,14 @@ CONTAINS
 
       ! Calculate magnetic energy
       b2local = SUM(bb(1:nx, 1:ny, 1:nz+1)) / 8. / pi * delx ** 3
-      CALL MPI_ALLREDUCE(b2local, b2global, 1, MPI_Real, MPI_SUM, MPI_COMM_WORLD, ierr)
+      CALL MPI_ALLREDUCE(b2local, b2global, 1, MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
 
       ! Dissipation Q = B ^ 2 / (4 * pi) * nu * v ^ 2
       diss = vx * vx + vy * vy + vz * vz
       diss = diss / frc / 4. / pi
       diss = diss * bb
       qlocal = SUM(diss(1:nx,1:ny,1:nz+1)) * delx ** 3
-      CALL MPI_ALLREDUCE(qlocal, qglobal, 1, MPI_Real, MPI_SUM, MPI_COMM_WORLD, ierr)
+      CALL MPI_ALLREDUCE(qlocal, qglobal, 1, MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
 
       ! div B
       divb = (bbx(2:nx+1, 1:ny, 1:nz) - bbx(1:nx, 1:ny, 1:nz)) / delx &
@@ -148,9 +145,9 @@ CONTAINS
       min_divb_local = MINVAL(divb)
       max_divb_local = MAXVAL(divb)
       mean_divb_local = SUM(divb) / (nxglobal * nyglobal * nzglobal)
-      CALL MPI_ALLREDUCE(min_divb_local, min_divb_global, 1, MPI_Real, MPI_MIN, MPI_COMM_WORLD, ierr)
-      CALL MPI_ALLREDUCE(max_divb_local, max_divb_global, 1, MPI_Real, MPI_MAX, MPI_COMM_WORLD, ierr)
-      CALL MPI_ALLREDUCE(mean_divb_local, mean_divb_global, 1, MPI_Real, MPI_SUM, MPI_COMM_WORLD, ierr)
+      CALL MPI_ALLREDUCE(min_divb_local, min_divb_global, 1, MPI_REAL8, MPI_MIN, MPI_COMM_WORLD, ierr)
+      CALL MPI_ALLREDUCE(max_divb_local, max_divb_global, 1, MPI_REAL8, MPI_MAX, MPI_COMM_WORLD, ierr)
+      CALL MPI_ALLREDUCE(mean_divb_local, mean_divb_global, 1, MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
 
       IF (rank .EQ. rankstart) THEN
         IF (MOD(n, 100) .EQ. 0) PRINT*, n, t
@@ -186,18 +183,18 @@ CONTAINS
       + (bbz(1:nx, 1:ny, 2:nz+1) - bbz(1:nx, 1:ny, 1:nz)) / delz
 
     ! Horizontal transfer
-    CALL MPI_SENDRECV(divb(nx, :, :), (ny + 2) * (nz + 2), MPI_REAL, right, tag, &
-                      divb(0,  :, :), (ny + 2) * (nz + 2), MPI_REAL, left,  tag, &
+    CALL MPI_SENDRECV(divb(nx, :, :), (ny + 2) * (nz + 2), MPI_REAL8, right, tag, &
+                      divb(0,  :, :), (ny + 2) * (nz + 2), MPI_REAL8, left,  tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(divb(1   , :, :), (ny + 2) * (nz + 2), MPI_REAL, left,  tag, &
-                      divb(nx+1, :, :), (ny + 2) * (nz + 2), MPI_REAL, right, tag, &
+    CALL MPI_SENDRECV(divb(1   , :, :), (ny + 2) * (nz + 2), MPI_REAL8, left,  tag, &
+                      divb(nx+1, :, :), (ny + 2) * (nz + 2), MPI_REAL8, right, tag, &
                       comm, stat, ierr)
     ! Vertical transfer
-    CALL MPI_SENDRECV(divb(:, ny, :), (nx + 2) * (nz + 2), MPI_REAL, up,   tag, &
-                      divb(:, 0,  :), (nx + 2) * (nz + 2), MPI_REAL, down, tag, &
+    CALL MPI_SENDRECV(divb(:, ny, :), (nx + 2) * (nz + 2), MPI_REAL8, up,   tag, &
+                      divb(:, 0,  :), (nx + 2) * (nz + 2), MPI_REAL8, down, tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(divb(:, 1,    :), (nx + 2) * (nz + 2), MPI_REAL, down, tag, &
-                      divb(:, ny+1, :), (nx + 2) * (nz + 2), MPI_REAL, up,   tag, &
+    CALL MPI_SENDRECV(divb(:, 1,    :), (nx + 2) * (nz + 2), MPI_REAL8, down, tag, &
+                      divb(:, ny+1, :), (nx + 2) * (nz + 2), MPI_REAL8, up,   tag, &
                       comm, stat, ierr)
     ! Apply boundary conditions
     IF (left .EQ. MPI_PROC_NULL) divb(0, :, :) = divb(1, :, :)
@@ -300,11 +297,11 @@ CONTAINS
       - (aay(:, :     , 2) - aay(:, :   , 1)) / delz
 
     ! Vertical transfer
-    CALL MPI_SENDRECV(bbx1(:, ny), nx + 1, MPI_REAL, up,   tag, &
-                      bbx1(:, 0 ), nx + 1, MPI_REAL, down, tag, &
+    CALL MPI_SENDRECV(bbx1(:, ny), nx + 1, MPI_REAL8, up,   tag, &
+                      bbx1(:, 0 ), nx + 1, MPI_REAL8, down, tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(bbx1(:, 1   ), nx + 1, MPI_REAL, down, tag, &
-                      bbx1(:, ny+1), nx + 1, MPI_REAL, up,   tag, &
+    CALL MPI_SENDRECV(bbx1(:, 1   ), nx + 1, MPI_REAL8, down, tag, &
+                      bbx1(:, ny+1), nx + 1, MPI_REAL8, up,   tag, &
                       comm, stat, ierr)
     ! Apply boundary conditions
     IF (down .EQ. MPI_PROC_NULL) bbx1(:, 0   ) = bbx1(:, 1 )
@@ -316,11 +313,11 @@ CONTAINS
         (aax(:,      :, 2) - aax(:,    :, 1)) / delz  &
       - (aaz(2:nx+1, :, 1) - aaz(1:nx, :, 1)) / delx
     ! Horizontal transfer
-    CALL MPI_SENDRECV(bby1(nx, :), ny + 1, MPI_REAL, right, tag, &
-                      bby1(0,  :), ny + 1, MPI_REAL, left,  tag, &
+    CALL MPI_SENDRECV(bby1(nx, :), ny + 1, MPI_REAL8, right, tag, &
+                      bby1(0,  :), ny + 1, MPI_REAL8, left,  tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(bby1(1   , :), ny + 1, MPI_REAL, left,  tag, &
-                      bby1(nx+1, :), ny + 1, MPI_REAL, right, tag, &
+    CALL MPI_SENDRECV(bby1(1   , :), ny + 1, MPI_REAL8, left,  tag, &
+                      bby1(nx+1, :), ny + 1, MPI_REAL8, right, tag, &
                       comm, stat, ierr)
     ! Apply boundary conditions
     IF (left  .EQ. MPI_PROC_NULL) bby1(0,    :) = bby1(1,  :)
@@ -332,18 +329,18 @@ CONTAINS
         (aay(2:nx+1,      :, 1) - aay(1:nx,    :, 1)) / delx  &
       - (aax(     :, 2:ny+1, 1) - aax(   :, 1:ny, 1)) / dely
     ! Horizontal transfer
-    CALL MPI_SENDRECV(bbz1(nx, :), ny + 2, MPI_REAL, right, tag, &
-                      bbz1(0,  :), ny + 2, MPI_REAL, left,  tag, &
+    CALL MPI_SENDRECV(bbz1(nx, :), ny + 2, MPI_REAL8, right, tag, &
+                      bbz1(0,  :), ny + 2, MPI_REAL8, left,  tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(bbz1(1   , :), ny + 2, MPI_REAL, left,  tag, &
-                      bbz1(nx+1, :), ny + 2, MPI_REAL, right, tag, &
+    CALL MPI_SENDRECV(bbz1(1   , :), ny + 2, MPI_REAL8, left,  tag, &
+                      bbz1(nx+1, :), ny + 2, MPI_REAL8, right, tag, &
                       comm, stat, ierr)
     ! Vertical transfer
-    CALL MPI_SENDRECV(bbz1(:, ny), nx + 2, MPI_REAL, up,   tag, &
-                      bbz1(:, 0 ), nx + 2, MPI_REAL, down, tag, &
+    CALL MPI_SENDRECV(bbz1(:, ny), nx + 2, MPI_REAL8, up,   tag, &
+                      bbz1(:, 0 ), nx + 2, MPI_REAL8, down, tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(bbz1(:, 1   ), nx + 2, MPI_REAL, down, tag, &
-                      bbz1(:, ny+1), nx + 2, MPI_REAL, up,   tag, &
+    CALL MPI_SENDRECV(bbz1(:, 1   ), nx + 2, MPI_REAL8, down, tag, &
+                      bbz1(:, ny+1), nx + 2, MPI_REAL8, up,   tag, &
                       comm, stat, ierr)
     ! Apply boundary conditions
     IF (left  .EQ. MPI_PROC_NULL) bbz1(0,    :) = bbz1(1,  :)
@@ -362,36 +359,36 @@ CONTAINS
 
   SUBROUTINE horizontal_transfer
 
-    CALL MPI_SENDRECV(bby(nx, :, :), (ny + 1) * (nz + 2), MPI_REAL, right, tag, &
-                      bby(0,  :, :), (ny + 1) * (nz + 2), MPI_REAL, left,  tag, &
+    CALL MPI_SENDRECV(bby(nx, :, :), (ny + 1) * (nz + 2), MPI_REAL8, right, tag, &
+                      bby(0,  :, :), (ny + 1) * (nz + 2), MPI_REAL8, left,  tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(bby(1   , :, :), (ny + 1) * (nz + 2), MPI_REAL, left,  tag, &
-                      bby(nx+1, :, :), (ny + 1) * (nz + 2), MPI_REAL, right, tag, &
+    CALL MPI_SENDRECV(bby(1   , :, :), (ny + 1) * (nz + 2), MPI_REAL8, left,  tag, &
+                      bby(nx+1, :, :), (ny + 1) * (nz + 2), MPI_REAL8, right, tag, &
                       comm, stat, ierr)
 
-    CALL MPI_SENDRECV(bbz(nx, :, :), (ny + 2) * (nz + 1), MPI_REAL, right, tag, &
-                      bbz(0,  :, :), (ny + 2) * (nz + 1), MPI_REAL, left,  tag, &
+    CALL MPI_SENDRECV(bbz(nx, :, :), (ny + 2) * (nz + 1), MPI_REAL8, right, tag, &
+                      bbz(0,  :, :), (ny + 2) * (nz + 1), MPI_REAL8, left,  tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(bbz(1   , :, :), (ny + 2) * (nz + 1), MPI_REAL, left,  tag, &
-                      bbz(nx+1, :, :), (ny + 2) * (nz + 1), MPI_REAL, right, tag, &
+    CALL MPI_SENDRECV(bbz(1   , :, :), (ny + 2) * (nz + 1), MPI_REAL8, left,  tag, &
+                      bbz(nx+1, :, :), (ny + 2) * (nz + 1), MPI_REAL8, right, tag, &
                       comm, stat, ierr)
 
   END SUBROUTINE horizontal_transfer
 
   SUBROUTINE vertical_transfer
 
-    CALL MPI_SENDRECV(bbx(:, ny, :), (nx + 1) * (nz + 2), MPI_REAL, up,   tag, &
-                      bbx(:, 0 , :), (nx + 1) * (nz + 2), MPI_REAL, down, tag, &
+    CALL MPI_SENDRECV(bbx(:, ny, :), (nx + 1) * (nz + 2), MPI_REAL8, up,   tag, &
+                      bbx(:, 0 , :), (nx + 1) * (nz + 2), MPI_REAL8, down, tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(bbx(:, 1   , :), (nx + 1) * (nz + 2), MPI_REAL, down, tag, &
-                      bbx(:, ny+1, :), (nx + 1) * (nz + 2), MPI_REAL, up,   tag, &
+    CALL MPI_SENDRECV(bbx(:, 1   , :), (nx + 1) * (nz + 2), MPI_REAL8, down, tag, &
+                      bbx(:, ny+1, :), (nx + 1) * (nz + 2), MPI_REAL8, up,   tag, &
                       comm, stat, ierr)
 
-    CALL MPI_SENDRECV(bbz(:, ny, :), (nx + 2) * (nz + 1), MPI_REAL, up,   tag, &
-                      bbz(:, 0 , :), (nx + 2) * (nz + 1), MPI_REAL, down, tag, &
+    CALL MPI_SENDRECV(bbz(:, ny, :), (nx + 2) * (nz + 1), MPI_REAL8, up,   tag, &
+                      bbz(:, 0 , :), (nx + 2) * (nz + 1), MPI_REAL8, down, tag, &
                       comm, stat, ierr)
-    CALL MPI_SENDRECV(bbz(:, 1   , :), (nx + 2) * (nz + 1), MPI_REAL, down, tag, &
-                      bbz(:, ny+1, :), (nx + 2) * (nz + 1), MPI_REAL, up,   tag, &
+    CALL MPI_SENDRECV(bbz(:, 1   , :), (nx + 2) * (nz + 1), MPI_REAL8, down, tag, &
+                      bbz(:, ny+1, :), (nx + 2) * (nz + 1), MPI_REAL8, up,   tag, &
                       comm, stat, ierr)
 
   END SUBROUTINE vertical_transfer

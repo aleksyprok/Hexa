@@ -19,9 +19,9 @@ os.makedirs(output_dir + '/bbz', exist_ok = True)
 nx = 128
 ny = 128
 nz = 128
-dx = np.float32(6 / nx)
-dy = np.float32(6 / ny)
-dz = np.float32(6 / nz)
+dx = np.float64(6 / nx)
+dy = np.float64(6 / ny)
+dz = np.float64(6 / nz)
 
 bbx_p = np.zeros((nz+2, ny+2, nx+1))
 bby_p = np.zeros((nz+2, ny+1, nx+2))
@@ -95,9 +95,9 @@ for n in range(file_number):
 
     filename = 'run1/relax_' + '{:05d}'.format(n)
     file = FortranFile(filename, 'r')
-    bbx = file.read_reals('float32').reshape((nz + 2, ny + 2, nx + 1), order = "C")
-    bby = file.read_reals('float32').reshape((nz + 2, ny + 1, nx + 2), order = "C")
-    bbz = file.read_reals('float32').reshape((nz + 1, ny + 2, nx + 2), order = "C")
+    bbx = file.read_reals('float64').reshape((nz + 2, ny + 2, nx + 1), order = "C")
+    bby = file.read_reals('float64').reshape((nz + 2, ny + 1, nx + 2), order = "C")
+    bbz = file.read_reals('float64').reshape((nz + 1, ny + 2, nx + 2), order = "C")
 
     k = 0
     for i in range(3):
@@ -109,6 +109,7 @@ for n in range(file_number):
             ax.plot(bbx[:, iy, ix])
             ax.plot(bbx_p[:, iy, ix])
             ax.plot(bbx_e[:, iy, ix])
+            ax.set_xlim(0, 10)
             ax.set_title('bbx, ix = ' + str(ix) + ', iy = ' + str(iy))
     fig.savefig(output_dir + '/bbx/' + '{:05d}'.format(n) + '.png',  bbox_inches='tight')
     fig.clf()
@@ -123,6 +124,7 @@ for n in range(file_number):
             ax.plot(bby[:, iy, ix])
             ax.plot(bby_p[:, iy, ix])
             ax.plot(bby_e[:, iy, ix])
+            ax.set_xlim(0, 10)
             ax.set_title('bby, ix = ' + str(ix) + ', iy = ' + str(iy))
     fig.savefig(output_dir + '/bby/' + '{:05d}'.format(n) + '.png',  bbox_inches='tight')
     fig.clf()
@@ -137,6 +139,7 @@ for n in range(file_number):
             ax.plot(bbz[:, iy, ix])
             ax.plot(bbz_p[:, iy, ix])
             ax.plot(bbz_e[:, iy, ix])
+            ax.set_xlim(0, 10)
             ax.set_title('bbz, ix = ' + str(ix) + ', iy = ' + str(iy))
     fig.savefig(output_dir + '/bbz/' + '{:05d}'.format(n) + '.png',  bbox_inches='tight')
     fig.clf()

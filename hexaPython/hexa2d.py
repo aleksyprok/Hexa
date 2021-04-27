@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 
 os.makedirs('data', exist_ok = True)
 
-def bbx_driv(x, t):
-    return np.cos(np.pi * x) ** 2
+def ramp_up(t):
+    return np.sin(np.pi * t / 2) ** 2 * (t <= 1) + 1 * (t >  1)
 
-def bby_driv(x, t):
-    return np.cos(np.pi * x) ** 2
+def bbx_driv(x, t):
+    return np.cos(np.pi * x) * ramp_up(t) * np.sin(np.pi * t)
 
 def step():
     # This subrotuine performs 1 timestep of the algorithm

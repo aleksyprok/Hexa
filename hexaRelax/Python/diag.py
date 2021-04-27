@@ -15,7 +15,7 @@ while True:
     if n % 1000 == 0: print(n)
     if not line:
         break
-    line = np.float32(line.split())
+    line = np.float64(line.split())
     # line = line.split())
     t = np.append(t,  line[0])
     e = np.append(e,  line[1])
